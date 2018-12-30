@@ -75,8 +75,6 @@ namespace Scrmizu
             }
         }
 
-
-
         public void SetItemData(IEnumerable<object> data)
         {
             _itemDataList = data.ToList();
@@ -88,6 +86,13 @@ namespace Scrmizu
         {
             _itemDataList.Add(data);
             _itemSize.Add(defaultItemSize);
+            UpdateContents();
+        }
+
+        public void AddRangeItemData(IEnumerable<object> data)
+        {
+            _itemDataList.AddRange(data);
+            _itemSize.AddRange(Enumerable.Repeat(defaultItemSize, _itemDataList.Count));
             UpdateContents();
         }
 

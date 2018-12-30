@@ -8,9 +8,4 @@ namespace Scrmizu
         void UpdateItemData(object data);
         void Hide();
     }
-
-    public interface IInfiniteScrollItemPool
-    {
-        
-    }
 }
