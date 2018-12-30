@@ -1,13 +1,13 @@
-﻿using System.Linq;
-using UnityEngine;
+﻿using System.Collections;
+using System.Linq;
 using Scrmizu;
+using UnityEngine;
 using UnityEngine.UI;
-using System.Collections;
 
 namespace Scrmizu_Sample
 {
     [RequireComponent(typeof(RectTransform))]
-    public class VerticalScrollItem : MonoBehaviour, IInfiniteScrollItem
+    public class HorizontalScrollItem : MonoBehaviour, IInfiniteScrollItem
     {
         private ScrollItemData _data;
 
@@ -35,7 +35,7 @@ namespace Scrmizu_Sample
             _data = scrollingItemData;
             Title.text = _data.title;
             Count.text = $"Count {_data.count:00}";
-            Value.text = _data.value;
+            Value.text = "横幅の最低サイズはこのぐらいです。　　　　\n" + _data.value.Replace("\n", "");
         }
 
         public void Hide()

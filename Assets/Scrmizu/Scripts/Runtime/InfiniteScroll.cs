@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -80,6 +81,7 @@ namespace Scrmizu
             _itemDataList = data.ToList();
             _itemSize = Enumerable.Repeat(defaultItemSize, _itemDataList.Count).ToList();
             UpdateContents();
+            StartCoroutine(UpdateCanvas());
         }
 
         public void AddItemData(object data)
@@ -87,6 +89,7 @@ namespace Scrmizu
             _itemDataList.Add(data);
             _itemSize.Add(defaultItemSize);
             UpdateContents();
+            StartCoroutine(UpdateCanvas());
         }
 
         public void AddRangeItemData(IEnumerable<object> data)
@@ -95,6 +98,7 @@ namespace Scrmizu
             _itemDataList.AddRange(item);
             _itemSize.AddRange(Enumerable.Repeat(defaultItemSize, item.Length));
             UpdateContents();
+            StartCoroutine(UpdateCanvas());
         }
 
         public void InsertItemData(int index, object data)
@@ -102,6 +106,7 @@ namespace Scrmizu
             _itemDataList.Insert(index, data);
             _itemSize.Insert(index, defaultItemSize);
             UpdateContents();
+            StartCoroutine(UpdateCanvas());
         }
 
         public void RemoveItemData(int index)
@@ -109,6 +114,7 @@ namespace Scrmizu
             _itemDataList.RemoveAt(index);
             _itemSize.RemoveAt(index);
             UpdateContents();
+            StartCoroutine(UpdateCanvas());
         }
 
         public void RemoveRangeItemData(int index, int count)
@@ -116,6 +122,7 @@ namespace Scrmizu
             _itemDataList.RemoveRange(index, count);
             _itemSize.RemoveRange(index, count);
             UpdateContents();
+            StartCoroutine(UpdateCanvas());
         }
 
         internal void UpdateItemSize(InfiniteScrollBinder binder)
@@ -159,8 +166,8 @@ namespace Scrmizu
                     break;
                 case Direction.Horizontal:
                     if (isReverse)
-                        _currentPosition = -1 * pos.x;
-                    else _currentPosition = pos.x;
+                        _currentPosition = pos.x;
+                    else _currentPosition = -1 * pos.x;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -244,7 +251,7 @@ namespace Scrmizu
                         infiniteScrollBinder.UpdateItemPosition(new Vector2(0, pos));
                         break;
                     case Direction.Horizontal:
-                        infiniteScrollBinder.UpdateItemPosition(new Vector2(pos, 0));
+                        infiniteScrollBinder.UpdateItemPosition(new Vector2(pos * -1, 0));
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -260,6 +267,14 @@ namespace Scrmizu
             {
                 InfiniteScrollBinders[i].UpdateSize();
             }
+        }
+
+        private IEnumerator UpdateCanvas()
+        {
+            yield return null;
+            Canvas.ForceUpdateCanvases();
+            gameObject.SetActive(false);
+            gameObject.SetActive(true);
         }
     }
 

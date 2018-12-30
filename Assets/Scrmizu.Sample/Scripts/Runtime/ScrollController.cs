@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Scrmizu_Sample
 {
     [RequireComponent(typeof(InfiniteScroll))]
-    public class VerticalScrollController : MonoBehaviour
+    public class ScrollController : MonoBehaviour
     {
         private InfiniteScroll _infiniteScroll;
 
@@ -20,7 +20,7 @@ namespace Scrmizu_Sample
         {
             InfiniteScroll.SetItemData(new[]
             {
-                new VerticalScrollItemData
+                new ScrollItemData
                 {
                     title = "Title 00",
                     count = 0,
@@ -32,11 +32,11 @@ namespace Scrmizu_Sample
                 }
             });
 
-            var list = new List<VerticalScrollItemData>();
+            var list = new List<ScrollItemData>();
             for (var i = 0; i < 100; i++)
             {
                 index++;
-                list.Add(new VerticalScrollItemData
+                list.Add(new ScrollItemData
                 {
                     title = $" タイトル {index:00}",
                     count = index,
@@ -50,7 +50,7 @@ namespace Scrmizu_Sample
         public void AddItem()
         {
             index++;
-            InfiniteScroll.AddItemData(new VerticalScrollItemData
+            InfiniteScroll.AddItemData(new ScrollItemData
             {
                 title = $" タイトル {index:00}",
                 count = index,
@@ -61,11 +61,11 @@ namespace Scrmizu_Sample
         [ContextMenu("AddRange")]
         public void AddRange()
         {
-            var list = new List<VerticalScrollItemData>();
+            var list = new List<ScrollItemData>();
             for (var i = 0; i < 25; i++)
             {
                 index++;
-                list.Add(new VerticalScrollItemData
+                list.Add(new ScrollItemData
                 {
                     title = $" タイトル {index:00}",
                     count = index,
