@@ -14,7 +14,8 @@ namespace Scrmizu
         private RectTransform RectTransform =>
             _rectTransform != null ? _rectTransform : _rectTransform = GetComponent<RectTransform>();
 
-        public Rect rect = Rect.zero;
+        public Vector2 size = Vector2.zero;
+
 
         public int ItemIndex => _itemIndex;
 
@@ -36,28 +37,20 @@ namespace Scrmizu
         {
             _itemIndex = itemIndex;
             InfiniteScrollItem.UpdateItemData(data);
-            if (gameObject.activeSelf) StartCoroutine(LateUpdateSize());
         }
 
         public void UpdateItemPosition(Vector2 position)
         {
             RectTransform.anchoredPosition = position;
-            UpdateSize();
         }
 
-        private void UpdateSize()
+        public void UpdateSize()
         {
-            if (rect == RectTransform.rect) return;
-            if (RectTransform.rect == Rect.zero) return;
-            rect = RectTransform.rect;
+            var newSize = new Vector2(RectTransform.rect.width, RectTransform.rect.height);
+            if (newSize == Vector2.zero) return;
+            if (size == newSize) return;
+            size = newSize;
             _infiniteScroll.UpdateItemSize(this);
-        }
-
-        private IEnumerator LateUpdateSize()
-        {
-            yield return null;
-            yield return null;
-            UpdateSize();
         }
     }
 }

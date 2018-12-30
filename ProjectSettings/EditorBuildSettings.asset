@@ -4,4 +4,8 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scrmizu.Sample/Scenes/Sample.unity
+    guid: 4d3e48de6c023f142a8fb9c5f37abf2c
+  m_configObjects: {}
