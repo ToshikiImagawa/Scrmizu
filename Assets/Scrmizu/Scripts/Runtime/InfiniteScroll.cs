@@ -110,6 +110,13 @@ namespace Scrmizu
             UpdateContents();
         }
 
+        public void RemoveRangeItemData(int index, int count)
+        {
+            _itemDataList.RemoveRange(index, count);
+            _itemSize.RemoveRange(index, count);
+            UpdateContents();
+        }
+
         internal void UpdateItemSize(InfiniteScrollBinder binder)
         {
             if (binder.ItemIndex < 0 || binder.ItemIndex > _itemSize.Count) return;

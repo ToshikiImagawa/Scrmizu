@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using Scrmizu;
 using UnityEngine;
@@ -31,10 +32,18 @@ namespace Scrmizu_Sample
                 }
             });
 
-            for(var i = 0; i < 100; i++)
+            var list = new List<VerticalScrollItemData>();
+            for (var i = 0; i < 100; i++)
             {
-                AddItem();
+                index++;
+                list.Add(new VerticalScrollItemData
+                {
+                    title = $" タイトル {index:00}",
+                    count = index,
+                    value = string.Join("\n", Enumerable.Repeat($"{index}", index).ToArray())
+                });
             }
+            InfiniteScroll.AddRangeItemData(list);
         }
 
         [ContextMenu("AddItem")]
@@ -47,6 +56,30 @@ namespace Scrmizu_Sample
                 count = index,
                 value = string.Join("\n", Enumerable.Repeat($"{index}", index).ToArray())
             });
+        }
+
+        [ContextMenu("AddRange")]
+        public void AddRange()
+        {
+            var list = new List<VerticalScrollItemData>();
+            for (var i = 0; i < 25; i++)
+            {
+                index++;
+                list.Add(new VerticalScrollItemData
+                {
+                    title = $" タイトル {index:00}",
+                    count = index,
+                    value = string.Join("\n", Enumerable.Repeat($"{index}", index).ToArray())
+                });
+            }
+            InfiniteScroll.AddRangeItemData(list);
+        }
+
+
+        [ContextMenu("RemoveRange")]
+        public void RemoveRange()
+        {
+            InfiniteScroll.RemoveRangeItemData(0, 25);
         }
     }
 }
