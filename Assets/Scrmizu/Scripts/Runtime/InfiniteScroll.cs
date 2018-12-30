@@ -91,8 +91,9 @@ namespace Scrmizu
 
         public void AddRangeItemData(IEnumerable<object> data)
         {
-            _itemDataList.AddRange(data);
-            _itemSize.AddRange(Enumerable.Repeat(defaultItemSize, _itemDataList.Count));
+            var item = data.ToArray();
+            _itemDataList.AddRange(item);
+            _itemSize.AddRange(Enumerable.Repeat(defaultItemSize, item.Length));
             UpdateContents();
         }
 
@@ -182,8 +183,6 @@ namespace Scrmizu
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-            Debug.LogError($"[UpdateContents] Count : {_itemSize.Count}, FullSize : {fullSize}");
-
             UpdatePosition();
         }
 

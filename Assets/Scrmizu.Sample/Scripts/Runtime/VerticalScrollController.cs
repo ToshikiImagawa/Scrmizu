@@ -75,7 +75,6 @@ namespace Scrmizu_Sample
             InfiniteScroll.AddRangeItemData(list);
         }
 
-
         [ContextMenu("RemoveRange")]
         public void RemoveRange()
         {
