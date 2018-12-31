@@ -160,7 +160,7 @@ namespace Scrmizu
         /// Removes the item data.
         /// </summary>
         /// <param name="index">Index.</param>
-        public void RemoveItemData(int index)
+        public void RemoveAtItemData(int index)
         {
             if (index < 0) throw new ArgumentOutOfRangeException(nameof(index), "Index is out of range.");
             if (index > _itemSizeList.Count) throw new ArgumentException("Deleted range is out of range.");
@@ -171,7 +171,7 @@ namespace Scrmizu
 
             if (itemIndex == index)
             {
-                MovePositionAt(index);
+                MovePositionAt(Math.Min(_itemSizeList.Count - 1, index));
             }
             else if (itemIndex > index)
             {
@@ -199,7 +199,7 @@ namespace Scrmizu
 
             if (itemIndex >= index && itemIndex <= index + count - 1)
             {
-                MovePositionAt(index);
+                MovePositionAt(Math.Min(_itemSizeList.Count - 1, index));
             }
             else if (itemIndex > index)
             {
@@ -208,6 +208,18 @@ namespace Scrmizu
                 var removeSize = itemSizeRange.Sum() + itemInterval * (count);
                 MovePosition(_currentPosition - removeSize);
             }
+            UpdateContents();
+            StartCoroutine(UpdateCanvas());
+        }
+
+        /// <summary>
+        /// Clears the item data.
+        /// </summary>
+        public void ClearItemData()
+        {
+            _itemDataList.Clear();
+            _itemSizeList.Clear();
+            MovePositionAt(0);
             UpdateContents();
             StartCoroutine(UpdateCanvas());
         }
@@ -267,6 +279,7 @@ namespace Scrmizu
         public float GetPositionAt(int index)
         {
             if (index < 0 || index > _itemSizeList.Count) throw new ArgumentOutOfRangeException(nameof(index), "Index is out of range.");
+            if (index == 0) return 0f;
             var itemSizeList = _itemSizeList.ToArray();
             var itemSizeRange = new float[index];
             Array.Copy(itemSizeList, 0, itemSizeRange, 0, index);

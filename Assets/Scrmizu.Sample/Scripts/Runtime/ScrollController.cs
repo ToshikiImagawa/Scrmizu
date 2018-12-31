@@ -58,6 +58,12 @@ namespace Scrmizu_Sample
             });
         }
 
+        [ContextMenu("RemoveAtItem")]
+        public void RemoveAtItem()
+        {
+            InfiniteScroll.RemoveAtItemData(5);
+        }
+
         [ContextMenu("InsertItem")]
         public void InsertItem()
         {
@@ -87,6 +93,12 @@ namespace Scrmizu_Sample
             InfiniteScroll.AddRangeItemData(list);
         }
 
+        [ContextMenu("RemoveRange")]
+        public void RemoveRange()
+        {
+            InfiniteScroll.RemoveRangeItemData(0, 25);
+        }
+
         [ContextMenu("InsertRange")]
         public void InsertRange()
         {
@@ -104,10 +116,10 @@ namespace Scrmizu_Sample
             InfiniteScroll.InsertRangeItemData(0, list);
         }
 
-        [ContextMenu("RemoveRange")]
-        public void RemoveRange()
+        [ContextMenu("Clear")]
+        public void Clear()
         {
-            InfiniteScroll.RemoveRangeItemData(0, 25);
+            InfiniteScroll.ClearItemData();
         }
 
         [ContextMenu("MovePositionAt")]
