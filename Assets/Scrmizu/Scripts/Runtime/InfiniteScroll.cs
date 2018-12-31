@@ -48,7 +48,6 @@ namespace Scrmizu
         private InfiniteScrollBinder[] _infiniteScrollBinders;
 
         private float _currentPosition;
-        private int _currentItemIndex;
         private int _currentBinderIndex;
         private float _currentItemIndexPosition;
 
@@ -59,7 +58,7 @@ namespace Scrmizu
         /// Gets the index of the current item.
         /// </summary>
         /// <value>The index of the current item.</value>
-        public int CurrentItemIndex => _currentItemIndex;
+        public int CurrentItemIndex { get; private set; }
 
         private InfiniteScrollBinder[] InfiniteScrollBinders
         {
@@ -136,6 +135,11 @@ namespace Scrmizu
             StartCoroutine(UpdateCanvas());
         }
 
+        /// <summary>
+        /// Inserts the range item data.
+        /// </summary>
+        /// <param name="index">Index.</param>
+        /// <param name="data">Data.</param>
         public void InsertRangeItemData(int index, IEnumerable<object> data)
         {
             var item = data.ToArray();
@@ -158,8 +162,22 @@ namespace Scrmizu
         /// <param name="index">Index.</param>
         public void RemoveItemData(int index)
         {
+            if (index < 0) throw new ArgumentOutOfRangeException(nameof(index), "Index is out of range.");
+            if (index > _itemSizeList.Count) throw new ArgumentException("Deleted range is out of range.");
+            var itemIndex = CurrentItemIndex;
+            var itemSizeList = _itemSizeList.ToArray();
             _itemDataList.RemoveAt(index);
             _itemSizeList.RemoveAt(index);
+
+            if (itemIndex == index)
+            {
+                MovePositionAt(index);
+            }
+            else if (itemIndex > index)
+            {
+                var removeSize = itemSizeList[index] + itemInterval;
+                MovePosition(_currentPosition - removeSize);
+            }
             UpdateContents();
             StartCoroutine(UpdateCanvas());
         }
@@ -347,10 +365,10 @@ namespace Scrmizu
                 currentItemIndexPosition += itemSize + itemInterval;
             } while (currentItemIndexPosition < _currentPosition);
 
-            _currentItemIndex = currentItemIndex;
+            CurrentItemIndex = currentItemIndex;
             _currentItemIndexPosition = currentItemIndexPosition;
 
-            _currentBinderIndex = _currentItemIndex % instantiatedItemCount;
+            _currentBinderIndex = CurrentItemIndex % instantiatedItemCount;
             UpdateBinder();
         }
 
@@ -365,7 +383,7 @@ namespace Scrmizu
                 var index = i;
                 var infiniteScrollBinder = InfiniteScrollBinders[index];
                 if (_currentBinderIndex > index) index = instantiatedItemCount + index;
-                var itemIndex = _currentItemIndex + index - _currentBinderIndex;
+                var itemIndex = CurrentItemIndex + index - _currentBinderIndex;
                 float pos;
                 if (data.Length <= itemIndex || itemIndex < 0)
                 {
