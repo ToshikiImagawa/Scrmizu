@@ -55,6 +55,12 @@ namespace Scrmizu
         private List<object> _itemDataList = new List<object>();
         private List<float> _itemSize = new List<float>();
 
+        /// <summary>
+        /// Gets the index of the current item.
+        /// </summary>
+        /// <value>The index of the current item.</value>
+        public int CurrentItemIndex => _currentItemIndex;
+
         private InfiniteScrollBinder[] InfiniteScrollBinders
         {
             get
@@ -76,6 +82,10 @@ namespace Scrmizu
             }
         }
 
+        /// <summary>
+        /// Sets the item data.
+        /// </summary>
+        /// <param name="data">Data.</param>
         public void SetItemData(IEnumerable<object> data)
         {
             _itemDataList = data.ToList();
@@ -84,6 +94,10 @@ namespace Scrmizu
             StartCoroutine(UpdateCanvas());
         }
 
+        /// <summary>
+        /// Adds the item data.
+        /// </summary>
+        /// <param name="data">Data.</param>
         public void AddItemData(object data)
         {
             _itemDataList.Add(data);
@@ -92,6 +106,10 @@ namespace Scrmizu
             StartCoroutine(UpdateCanvas());
         }
 
+        /// <summary>
+        /// Adds the range item data.
+        /// </summary>
+        /// <param name="data">Data.</param>
         public void AddRangeItemData(IEnumerable<object> data)
         {
             var item = data.ToArray();
@@ -101,6 +119,11 @@ namespace Scrmizu
             StartCoroutine(UpdateCanvas());
         }
 
+        /// <summary>
+        /// Inserts the item data.
+        /// </summary>
+        /// <param name="index">Index.</param>
+        /// <param name="data">Data.</param>
         public void InsertItemData(int index, object data)
         {
             _itemDataList.Insert(index, data);
@@ -109,6 +132,10 @@ namespace Scrmizu
             StartCoroutine(UpdateCanvas());
         }
 
+        /// <summary>
+        /// Removes the item data.
+        /// </summary>
+        /// <param name="index">Index.</param>
         public void RemoveItemData(int index)
         {
             _itemDataList.RemoveAt(index);
@@ -117,12 +144,77 @@ namespace Scrmizu
             StartCoroutine(UpdateCanvas());
         }
 
+        /// <summary>
+        /// Removes the range item data.
+        /// </summary>
+        /// <param name="index">Index.</param>
+        /// <param name="count">Count.</param>
         public void RemoveRangeItemData(int index, int count)
         {
             _itemDataList.RemoveRange(index, count);
             _itemSize.RemoveRange(index, count);
             UpdateContents();
             StartCoroutine(UpdateCanvas());
+        }
+
+        /// <summary>
+        /// Moves the position.
+        /// </summary>
+        /// <param name="position">Position.</param>
+        public void MovePosition(float position)
+        {
+            switch (direction)
+            {
+                case Direction.Vertical:
+                    if (isReverse)
+                        content.anchoredPosition = new Vector2(
+                            content.anchoredPosition.x,
+                            -1 * position
+                        );
+                    else
+                        content.anchoredPosition = new Vector2(
+                            content.anchoredPosition.x,
+                            position
+                        );
+                    break;
+                case Direction.Horizontal:
+                    if (isReverse)
+                        content.anchoredPosition = new Vector2(
+                            position,
+                            content.anchoredPosition.y
+                        );
+                    else
+                        content.anchoredPosition = new Vector2(
+                            -1 * position,
+                            content.anchoredPosition.y
+                        );
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        /// <summary>
+        /// Moves the position at index.
+        /// </summary>
+        /// <param name="index">Index.</param>
+        public void MovePositionAt(int index)
+        {
+            MovePosition(GetPositionAt(index));
+        }
+
+        /// <summary>
+        /// Gets the position at index.
+        /// </summary>
+        /// <returns>Positin</returns>
+        /// <param name="index">Index.</param>
+        public float GetPositionAt(int index)
+        {
+            if (index < 0 || index > _itemSize.Count) throw new ArgumentOutOfRangeException(nameof(index), "Index is out of range.");
+            var itemSizeList = _itemSize.ToArray();
+            var itemSizeRange = new float[index];
+            Array.Copy(itemSizeList, 0, itemSizeRange, 0, index);
+            return itemSizeRange.Sum() + itemInterval * index;
         }
 
         internal void UpdateItemSize(InfiniteScrollBinder binder)
@@ -152,6 +244,16 @@ namespace Scrmizu
             onValueChanged.AddListener(OnScrollMove);
 
             UpdatePosition();
+        }
+
+        protected override void LateUpdate()
+        {
+            base.LateUpdate();
+            if (!Application.isPlaying) return;
+            for (var i = 0; i < InfiniteScrollBinders.Length; i++)
+            {
+                InfiniteScrollBinders[i].UpdateSize();
+            }
         }
 
         private void OnScrollMove(Vector2 call)
@@ -256,16 +358,6 @@ namespace Scrmizu
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
-            }
-        }
-
-        protected override void LateUpdate()
-        {
-            base.LateUpdate();
-            if (!Application.isPlaying) return;
-            for (var i = 0; i < InfiniteScrollBinders.Length; i++)
-            {
-                InfiniteScrollBinders[i].UpdateSize();
             }
         }
 

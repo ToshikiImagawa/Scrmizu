@@ -80,5 +80,11 @@ namespace Scrmizu_Sample
         {
             InfiniteScroll.RemoveRangeItemData(0, 25);
         }
+
+        [ContextMenu("MovePositionAt")]
+        public void MovePositionAt()
+        {
+            InfiniteScroll.MovePositionAt(5);
+        }
     }
 }
