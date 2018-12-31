@@ -367,19 +367,47 @@ namespace Scrmizu
         private void UpdatePosition()
         {
             var itemSizeList = _itemSizeList.ToArray();
-            var currentItemIndexPosition = 0f;
-            var currentItemIndex = -1;
-            do
-            {
-                currentItemIndex++;
-                var itemSize = itemSizeList.Length > currentItemIndex
-                    ? itemSizeList[currentItemIndex]
-                    : defaultItemSize;
-                currentItemIndexPosition += itemSize + itemInterval;
-            } while (currentItemIndexPosition < _currentPosition);
 
-            CurrentItemIndex = currentItemIndex;
-            _currentItemIndexPosition = currentItemIndexPosition;
+            var smallItemIndex = 0;
+            var bigItemIndex = itemSizeList.Length - 1;
+            var smallItemIndexPosition = 0f;
+            var bigItemIndexPosition = itemSizeList.Sum() + itemInterval * (itemSizeList.Length - 1);
+
+            if(bigItemIndexPosition <= _currentPosition)
+            {
+                CurrentItemIndex = itemSizeList.Length - 1;
+                _currentItemIndexPosition = bigItemIndexPosition;
+            }
+            else if(_currentPosition < 0)
+            {
+                CurrentItemIndex = 0;
+                _currentItemIndexPosition = 0;
+            }
+            else
+            {
+                var i = 0;
+                while (smallItemIndex < (bigItemIndex - 1))
+                {
+                    var middleItemIndex = (bigItemIndex + smallItemIndex) / 2;
+                    var middleItemSizeList = new float[middleItemIndex + 1];
+                    Array.Copy(itemSizeList, middleItemSizeList, middleItemIndex + 1);
+                    var middleItemIndexPosition = middleItemSizeList.Sum() + itemInterval * middleItemIndex;
+
+                    if(middleItemIndexPosition <= _currentPosition)
+                    {
+                        smallItemIndex = middleItemIndex;
+                        smallItemIndexPosition = middleItemIndexPosition;
+                    }
+                    else if (middleItemIndexPosition > _currentPosition)
+                    {
+                        bigItemIndex = middleItemIndex;
+                        bigItemIndexPosition = middleItemIndexPosition;
+                    }
+                    i++;
+                }
+                CurrentItemIndex = smallItemIndex;
+                _currentItemIndexPosition = smallItemIndexPosition;
+            }
 
             _currentBinderIndex = CurrentItemIndex % instantiatedItemCount;
             UpdateBinder();
