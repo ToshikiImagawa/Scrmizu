@@ -1129,11 +1129,11 @@ RectTransform:
   m_Father: {fileID: 1386998215}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
-  m_Pivot: {x: 0, y: 1}
+  m_Pivot: {x: 0, y: 0}
 --- !u!1 &1112052115
 GameObject:
   m_ObjectHideFlags: 0
@@ -1264,11 +1264,11 @@ RectTransform:
   m_Father: {fileID: 1051699274}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 1}
+  m_AnchorMin: {x: 1, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
-  m_Pivot: {x: 0, y: 1}
+  m_Pivot: {x: 1, y: 0.5}
 --- !u!1 &1128689421
 GameObject:
   m_ObjectHideFlags: 0
@@ -1812,8 +1812,8 @@ MonoBehaviour:
     m_TypeName: UnityEngine.UI.ScrollRect+ScrollRectEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
   direction: 0
-  isReverse: 0
-  itemBase: {fileID: 9093377648178065477, guid: 9b1954e107aba71499e2f5516c0873b6,
+  isReverse: 1
+  itemBase: {fileID: 9093377648178065477, guid: 0201ee7f20a5f484299b67855d2b91aa,
     type: 3}
   defaultItemSize: 400
   itemInterval: 10
@@ -2015,8 +2015,8 @@ MonoBehaviour:
     m_TypeName: UnityEngine.UI.ScrollRect+ScrollRectEvent, UnityEngine.UI, Version=1.0.0.0,
       Culture=neutral, PublicKeyToken=null
   direction: 1
-  isReverse: 0
-  itemBase: {fileID: 7540928802624853258, guid: 9d7a54f3b3cc5441d8de99f6d93f3fad,
+  isReverse: 1
+  itemBase: {fileID: 7540928802624853258, guid: cc236d189d401481eb3cbcdd66df9451,
     type: 3}
   defaultItemSize: 600
   itemInterval: 10
