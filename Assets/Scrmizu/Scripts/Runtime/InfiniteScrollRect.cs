@@ -7,7 +7,8 @@ using UnityEngine.UI;
 
 namespace Scrmizu
 {
-    public class InfiniteScroll : ScrollRect
+    [AddComponentMenu("UI/Infinite Scroll")]
+    public class InfiniteScrollRect : ScrollRect
     {
         /// <summary>
         /// Direction of scroll.

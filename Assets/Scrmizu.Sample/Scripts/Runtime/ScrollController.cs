@@ -5,14 +5,14 @@ using UnityEngine;
 
 namespace Scrmizu_Sample
 {
-    [RequireComponent(typeof(InfiniteScroll))]
+    [RequireComponent(typeof(InfiniteScrollRect))]
     public class ScrollController : MonoBehaviour
     {
-        private InfiniteScroll _infiniteScroll;
+        private InfiniteScrollRect _infiniteScroll;
 
-        private InfiniteScroll InfiniteScroll => _infiniteScroll != null
+        private InfiniteScrollRect InfiniteScroll => _infiniteScroll != null
             ? _infiniteScroll
-            : _infiniteScroll = GetComponent<InfiniteScroll>();
+            : _infiniteScroll = GetComponent<InfiniteScrollRect>();
 
         private int index = 0;
 

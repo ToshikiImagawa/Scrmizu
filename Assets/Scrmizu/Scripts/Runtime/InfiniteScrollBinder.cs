@@ -3,9 +3,10 @@ using UnityEngine;
 
 namespace Scrmizu
 {
+    [AddComponentMenu("")]
     internal class InfiniteScrollBinder : MonoBehaviour
     {
-        private InfiniteScroll _infiniteScroll;
+        private InfiniteScrollRect _infiniteScroll;
 
         private RectTransform _rectTransform;
         private IInfiniteScrollItem _infiniteScrollItem;
@@ -22,7 +23,7 @@ namespace Scrmizu
         private IInfiniteScrollItem InfiniteScrollItem =>
             _infiniteScrollItem ?? (_infiniteScrollItem = GetComponent<IInfiniteScrollItem>());
 
-        public void SetInfiniteScroll(InfiniteScroll infiniteScroll)
+        public void SetInfiniteScroll(InfiniteScrollRect infiniteScroll)
         {
             _infiniteScroll = infiniteScroll;
         }

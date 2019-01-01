@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Scrmizu.Editor
 {
-    [CustomEditor(typeof(InfiniteScroll), true)]
+    [CustomEditor(typeof(InfiniteScrollRect), true)]
     [CanEditMultipleObjects]
     public class InfiniteScrollEditor : UnityEditor.Editor
     {
