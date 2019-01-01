@@ -373,12 +373,12 @@ namespace Scrmizu
             var smallItemIndexPosition = 0f;
             var bigItemIndexPosition = itemSizeList.Sum() + itemInterval * (itemSizeList.Length - 1);
 
-            if(bigItemIndexPosition <= _currentPosition)
+            if (bigItemIndexPosition <= _currentPosition)
             {
                 CurrentItemIndex = itemSizeList.Length - 1;
                 _currentItemIndexPosition = bigItemIndexPosition;
             }
-            else if(_currentPosition < 0)
+            else if (_currentPosition < 0)
             {
                 CurrentItemIndex = 0;
                 _currentItemIndexPosition = 0;
@@ -393,7 +393,7 @@ namespace Scrmizu
                     Array.Copy(itemSizeList, middleItemSizeList, middleItemIndex + 1);
                     var middleItemIndexPosition = middleItemSizeList.Sum() + itemInterval * middleItemIndex;
 
-                    if(middleItemIndexPosition <= _currentPosition)
+                    if (middleItemIndexPosition <= _currentPosition)
                     {
                         smallItemIndex = middleItemIndex;
                         smallItemIndexPosition = middleItemIndexPosition;
