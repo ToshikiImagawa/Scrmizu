@@ -471,7 +471,7 @@ namespace Scrmizu
         private void UpdateCanvas()
         {
             if (!_isUpdateCanvasRequest) return;
-            _isUpdateCanvasRequest = true;
+            _isUpdateCanvasRequest = false;
             Canvas.ForceUpdateCanvases();
             gameObject.SetActive(false);
             gameObject.SetActive(true);
