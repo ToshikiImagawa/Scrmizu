@@ -50,7 +50,7 @@ namespace Scrmizu
 
         private float _currentPosition;
         private int _currentBinderIndex;
-        private float _currentItemIndexPosition;
+        private bool _isUpdateCanvasRequest;
 
         private List<object> _itemDataList = new List<object>();
         private List<float> _itemSizeList = new List<float>();
@@ -92,7 +92,7 @@ namespace Scrmizu
             _itemSizeList = Enumerable.Repeat(defaultItemSize, _itemDataList.Count).ToList();
             MovePositionAt(0);
             UpdateContents();
-            StartCoroutine(UpdateCanvas());
+            _isUpdateCanvasRequest = true;
         }
 
         /// <summary>
@@ -104,7 +104,7 @@ namespace Scrmizu
             _itemDataList.Add(data);
             _itemSizeList.Add(defaultItemSize);
             UpdateContents();
-            StartCoroutine(UpdateCanvas());
+            _isUpdateCanvasRequest = true;
         }
 
         /// <summary>
@@ -117,7 +117,7 @@ namespace Scrmizu
             _itemDataList.AddRange(item);
             _itemSizeList.AddRange(Enumerable.Repeat(defaultItemSize, item.Length));
             UpdateContents();
-            StartCoroutine(UpdateCanvas());
+            _isUpdateCanvasRequest = true;
         }
 
         /// <summary>
@@ -133,7 +133,7 @@ namespace Scrmizu
             if (CurrentItemIndex >= index) MovePosition(_currentPosition + defaultItemSize + itemInterval);
 
             UpdateContents();
-            StartCoroutine(UpdateCanvas());
+            _isUpdateCanvasRequest = true;
         }
 
         /// <summary>
@@ -154,7 +154,7 @@ namespace Scrmizu
             }
 
             UpdateContents();
-            StartCoroutine(UpdateCanvas());
+            _isUpdateCanvasRequest = true;
         }
 
         /// <summary>
@@ -179,8 +179,9 @@ namespace Scrmizu
                 var removeSize = itemSizeList[index] + itemInterval;
                 MovePosition(_currentPosition - removeSize);
             }
+
             UpdateContents();
-            StartCoroutine(UpdateCanvas());
+            _isUpdateCanvasRequest = true;
         }
 
         /// <summary>
@@ -209,8 +210,9 @@ namespace Scrmizu
                 var removeSize = itemSizeRange.Sum() + itemInterval * (count);
                 MovePosition(_currentPosition - removeSize);
             }
+
             UpdateContents();
-            StartCoroutine(UpdateCanvas());
+            _isUpdateCanvasRequest = true;
         }
 
         /// <summary>
@@ -222,7 +224,7 @@ namespace Scrmizu
             _itemSizeList.Clear();
             MovePositionAt(0);
             UpdateContents();
-            StartCoroutine(UpdateCanvas());
+            _isUpdateCanvasRequest = true;
         }
 
         /// <summary>
@@ -260,6 +262,7 @@ namespace Scrmizu
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+
             _currentPosition = position;
         }
 
@@ -279,7 +282,8 @@ namespace Scrmizu
         /// <param name="index">Index.</param>
         public float GetPositionAt(int index)
         {
-            if (index < 0 || index > _itemSizeList.Count) throw new ArgumentOutOfRangeException(nameof(index), "Index is out of range.");
+            if (index < 0 || index > _itemSizeList.Count)
+                throw new ArgumentOutOfRangeException(nameof(index), "Index is out of range.");
             if (index == 0) return 0f;
             var itemSizeList = _itemSizeList.ToArray();
             var itemSizeRange = new float[index];
@@ -302,6 +306,7 @@ namespace Scrmizu
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+
             if (_itemSizeList[binder.ItemIndex].Equals(size)) return;
             _itemSizeList[binder.ItemIndex] = size;
             UpdateContents();
@@ -319,11 +324,15 @@ namespace Scrmizu
         protected override void LateUpdate()
         {
             base.LateUpdate();
-            if (!Application.isPlaying) return;
-            for (var i = 0; i < InfiniteScrollBinders.Length; i++)
+            if (Application.isPlaying)
             {
-                InfiniteScrollBinders[i].UpdateSize();
+                for (var i = 0; i < InfiniteScrollBinders.Length; i++)
+                {
+                    InfiniteScrollBinders[i].UpdateSize();
+                }
             }
+
+            UpdateCanvas();
         }
 
         private void OnScrollMove(Vector2 call)
@@ -362,6 +371,7 @@ namespace Scrmizu
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+
             UpdatePosition();
         }
 
@@ -377,12 +387,10 @@ namespace Scrmizu
             if (bigItemIndexPosition <= _currentPosition)
             {
                 CurrentItemIndex = itemSizeList.Length - 1;
-                _currentItemIndexPosition = bigItemIndexPosition;
             }
             else if (_currentPosition < 0)
             {
                 CurrentItemIndex = 0;
-                _currentItemIndexPosition = 0;
             }
             else
             {
@@ -404,10 +412,11 @@ namespace Scrmizu
                         bigItemIndex = middleItemIndex;
                         bigItemIndexPosition = middleItemIndexPosition;
                     }
+
                     i++;
                 }
+
                 CurrentItemIndex = smallItemIndex;
-                _currentItemIndexPosition = smallItemIndexPosition;
             }
 
             _currentBinderIndex = CurrentItemIndex % instantiatedItemCount;
@@ -459,9 +468,10 @@ namespace Scrmizu
             }
         }
 
-        private IEnumerator UpdateCanvas()
+        private void UpdateCanvas()
         {
-            yield return null;
+            if (!_isUpdateCanvasRequest) return;
+            _isUpdateCanvasRequest = true;
             Canvas.ForceUpdateCanvases();
             gameObject.SetActive(false);
             gameObject.SetActive(true);
