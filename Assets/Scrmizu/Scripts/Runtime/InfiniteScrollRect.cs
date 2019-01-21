@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -46,9 +45,8 @@ namespace Scrmizu
         [SerializeField, Range(1, 100), Tooltip("Count to be instantiated.")]
         private int instantiatedItemCount = 9;
 
-        private InfiniteScrollBinder[] _infiniteScrollBinders;
+        private InfiniteScrollBinderBase[] _infiniteScrollBinders;
 
-        private float _currentPosition;
         private int _currentBinderIndex;
         private bool _isUpdateCanvasRequest;
 
@@ -61,19 +59,53 @@ namespace Scrmizu
         /// <value>The index of the current item.</value>
         public int CurrentItemIndex { get; private set; }
 
-        private InfiniteScrollBinder[] InfiniteScrollBinders
+        /// <summary>
+        /// Get the position of the current item.　
+        /// </summary>
+        /// <value>The position of the current item.</value>
+        public float CurrentPosition { get; private set; }
+
+        /// <summary>
+        /// Get count of items.
+        /// </summary>
+        /// <value>Count of items.</value>
+        public int Count => _itemSizeList.Count;
+
+        /// <summary>
+        /// Max value that can be scrolled.
+        /// </summary>
+        /// <exception cref="ArgumentOutOfRangeException"></exception>
+        /// <value>The max scrollable position.</value>
+        public float MaxScrollPosition
+        {
+            get
+            {
+                switch (direction)
+                {
+                    case Direction.Vertical:
+                        return content.rect.height - viewport.rect.height;
+                    case Direction.Horizontal:
+                        return content.rect.width - viewport.rect.width;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
+        }
+
+        private InfiniteScrollBinderBase[] InfiniteScrollBinders
         {
             get
             {
                 if (_infiniteScrollBinders != null) return _infiniteScrollBinders;
                 if (content == null) throw new Exception("Content is not set.");
                 if (itemBase == null) throw new Exception("ItemBase is not set.");
-                _infiniteScrollBinders = new InfiniteScrollBinder[instantiatedItemCount];
+                _infiniteScrollBinders = new InfiniteScrollBinderBase[instantiatedItemCount];
                 for (var i = 0; i < instantiatedItemCount; i++)
                 {
                     var item = Instantiate(itemBase, content, false);
                     item.name = $"{nameof(itemBase)}_{i}";
-                    _infiniteScrollBinders[i] = item.gameObject.AddComponent<InfiniteScrollBinder>();
+                    _infiniteScrollBinders[i] = item.gameObject.GetComponent<InfiniteScrollBinderBase>() ??
+                                                item.gameObject.AddComponent<InfiniteScrollBinder>();
                     _infiniteScrollBinders[i].SetInfiniteScroll(this);
                     _infiniteScrollBinders[i].Hide();
                 }
@@ -130,7 +162,7 @@ namespace Scrmizu
             _itemDataList.Insert(index, data);
             _itemSizeList.Insert(index, defaultItemSize);
 
-            if (CurrentItemIndex >= index) MovePosition(_currentPosition + defaultItemSize + itemInterval);
+            if (CurrentItemIndex >= index) MovePosition(CurrentPosition + defaultItemSize + itemInterval);
 
             UpdateContents();
             _isUpdateCanvasRequest = true;
@@ -150,7 +182,7 @@ namespace Scrmizu
             if (CurrentItemIndex >= index)
             {
                 var addSize = (defaultItemSize + itemInterval) * item.Length;
-                MovePosition(_currentPosition + addSize);
+                MovePosition(CurrentPosition + addSize);
             }
 
             UpdateContents();
@@ -177,7 +209,7 @@ namespace Scrmizu
             else if (itemIndex > index)
             {
                 var removeSize = itemSizeList[index] + itemInterval;
-                MovePosition(_currentPosition - removeSize);
+                MovePosition(CurrentPosition - removeSize);
             }
 
             UpdateContents();
@@ -208,7 +240,7 @@ namespace Scrmizu
                 var itemSizeRange = new float[count];
                 Array.Copy(itemSizeList, index, itemSizeRange, 0, count);
                 var removeSize = itemSizeRange.Sum() + itemInterval * (count);
-                MovePosition(_currentPosition - removeSize);
+                MovePosition(CurrentPosition - removeSize);
             }
 
             UpdateContents();
@@ -263,7 +295,7 @@ namespace Scrmizu
                     throw new ArgumentOutOfRangeException();
             }
 
-            _currentPosition = position;
+            CurrentPosition = position;
         }
 
         /// <summary>
@@ -278,7 +310,7 @@ namespace Scrmizu
         /// <summary>
         /// Gets the position at index.
         /// </summary>
-        /// <returns>Positin</returns>
+        /// <returns>Position.</returns>
         /// <param name="index">Index.</param>
         public float GetPositionAt(int index)
         {
@@ -291,17 +323,43 @@ namespace Scrmizu
             return itemSizeRange.Sum() + itemInterval * index;
         }
 
-        internal void UpdateItemSize(InfiniteScrollBinder binder)
+        /// <summary>
+        /// Gets the size at index.
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns>Size.</returns>
+        /// <exception cref="ArgumentOutOfRangeException"></exception>
+        public float GetItemSize(int index)
+        {
+            if (index < 0 || index > _itemSizeList.Count)
+                throw new ArgumentOutOfRangeException(nameof(index), "Index is out of range.");
+            return _itemSizeList[index];
+        }
+
+        /// <summary>
+        /// Gets the item data at index.
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns>Item data.</returns>
+        /// <exception cref="ArgumentOutOfRangeException"></exception>
+        public object GetItemData(int index)
+        {
+            if (index < 0 || index > _itemDataList.Count)
+                throw new ArgumentOutOfRangeException(nameof(index), "Index is out of range.");
+            return _itemDataList[index];
+        }
+
+        internal void UpdateItemSize(InfiniteScrollBinderBase binder)
         {
             if (binder.ItemIndex < 0 || binder.ItemIndex > _itemSizeList.Count) return;
             float size;
             switch (direction)
             {
                 case Direction.Vertical:
-                    size = binder.size.y;
+                    size = binder.Size.y;
                     break;
                 case Direction.Horizontal:
-                    size = binder.size.x;
+                    size = binder.Size.x;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -342,13 +400,13 @@ namespace Scrmizu
             {
                 case Direction.Vertical:
                     if (isReverse)
-                        _currentPosition = -1 * pos.y;
-                    else _currentPosition = pos.y;
+                        CurrentPosition = -1 * pos.y;
+                    else CurrentPosition = pos.y;
                     break;
                 case Direction.Horizontal:
                     if (isReverse)
-                        _currentPosition = pos.x;
-                    else _currentPosition = -1 * pos.x;
+                        CurrentPosition = pos.x;
+                    else CurrentPosition = -1 * pos.x;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -384,11 +442,11 @@ namespace Scrmizu
             var smallItemIndexPosition = 0f;
             var bigItemIndexPosition = itemSizeList.Sum() + itemInterval * (itemSizeList.Length - 1);
 
-            if (bigItemIndexPosition <= _currentPosition)
+            if (bigItemIndexPosition <= CurrentPosition)
             {
                 CurrentItemIndex = itemSizeList.Length - 1;
             }
-            else if (_currentPosition < 0)
+            else if (CurrentPosition < 0)
             {
                 CurrentItemIndex = 0;
             }
@@ -402,12 +460,12 @@ namespace Scrmizu
                     Array.Copy(itemSizeList, middleItemSizeList, middleItemIndex + 1);
                     var middleItemIndexPosition = middleItemSizeList.Sum() + itemInterval * middleItemIndex;
 
-                    if (middleItemIndexPosition <= _currentPosition)
+                    if (middleItemIndexPosition <= CurrentPosition)
                     {
                         smallItemIndex = middleItemIndex;
                         smallItemIndexPosition = middleItemIndexPosition;
                     }
-                    else if (middleItemIndexPosition > _currentPosition)
+                    else if (middleItemIndexPosition > CurrentPosition)
                     {
                         bigItemIndex = middleItemIndex;
                         bigItemIndexPosition = middleItemIndexPosition;
@@ -477,54 +535,24 @@ namespace Scrmizu
             gameObject.SetActive(true);
         }
 
-        internal class InfiniteScrollBinder : MonoBehaviour
+        internal class InfiniteScrollBinder : InfiniteScrollBinderBase
         {
-            private InfiniteScrollRect _infiniteScroll;
-
             private RectTransform _rectTransform;
-            private IInfiniteScrollItem _infiniteScrollItem;
-            private int _itemIndex;
-
             private RectTransform RectTransform =>
                 _rectTransform != null ? _rectTransform : _rectTransform = GetComponent<RectTransform>();
 
-            public Vector2 size = Vector2.zero;
-
-
-            public int ItemIndex => _itemIndex;
-
-            private IInfiniteScrollItem InfiniteScrollItem =>
-                _infiniteScrollItem ?? (_infiniteScrollItem = GetComponent<IInfiniteScrollItem>());
-
-            public void SetInfiniteScroll(InfiniteScrollRect infiniteScroll)
+            public override Vector2 Size
             {
-                _infiniteScroll = infiniteScroll;
+                get
+                {
+                    var rect = RectTransform.rect;
+                    return new Vector2(rect.width, rect.height);
+                }
             }
 
-            public void Hide()
-            {
-                _itemIndex = -1;
-                InfiniteScrollItem.Hide();
-            }
-
-            public void UpdateItemData(object data, int itemIndex)
-            {
-                _itemIndex = itemIndex;
-                InfiniteScrollItem.UpdateItemData(data);
-            }
-
-            public void UpdateItemPosition(Vector2 position)
+            public override void UpdateItemPosition(Vector2 position)
             {
                 RectTransform.anchoredPosition = position;
-            }
-
-            public void UpdateSize()
-            {
-                var newSize = new Vector2(RectTransform.rect.width, RectTransform.rect.height);
-                if (newSize == Vector2.zero) return;
-                if (size == newSize) return;
-                size = newSize;
-                _infiniteScroll.UpdateItemSize(this);
             }
         }
     }
