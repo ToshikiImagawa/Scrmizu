@@ -13,31 +13,31 @@ namespace Scrmizu
         /// Direction of scroll.
         /// </summary>
         [SerializeField, Tooltip("Direction of scroll.")]
-        private Direction direction;
+        private Direction direction = Direction.Vertical;
 
         /// <summary>
         /// Reverse direction scroll.
         /// </summary>
         [SerializeField, Tooltip("Reverse direction scroll.")]
-        private bool isReverse;
+        private bool isReverse = false;
 
         /// <summary>
         /// The contentItem that can be instantiated in the scroll area.
         /// </summary>
         [SerializeField, Tooltip("The contentItem that can be instantiated in the scroll area.")]
-        private MonoBehaviour itemBase;
+        private MonoBehaviour itemBase = null;
 
         /// <summary>
         /// Item size when default display.
         /// </summary>
         [SerializeField, Tooltip("Item size when default display.")]
-        private float defaultItemSize;
+        private float defaultItemSize = 10f;
 
         /// <summary>
         /// Item interval.
         /// </summary>
         [SerializeField, Tooltip("Item interval.")]
-        private float itemInterval;
+        private float itemInterval = 10f;
 
         /// <summary>
         /// Count to be instantiated.
