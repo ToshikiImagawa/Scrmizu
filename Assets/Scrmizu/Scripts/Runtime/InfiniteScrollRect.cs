@@ -331,7 +331,7 @@ namespace Scrmizu
         /// <exception cref="ArgumentOutOfRangeException"></exception>
         public float GetItemSize(int index)
         {
-            if (index < 0 || index > _itemSizeList.Count)
+            if (index < 0 || index >= _itemSizeList.Count)
                 throw new ArgumentOutOfRangeException(nameof(index), "Index is out of range.");
             return _itemSizeList[index];
         }
