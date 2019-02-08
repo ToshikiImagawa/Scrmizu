@@ -7,7 +7,7 @@ using UnityEngine.UI;
 namespace Scrmizu
 {
     [AddComponentMenu("UI/Infinite Scroll Rect")]
-    public class InfiniteScrollRect : ScrollRect
+    public class InfiniteScrollRect : NestedScrollRect
     {
         /// <summary>
         /// Direction of scroll.
@@ -439,7 +439,6 @@ namespace Scrmizu
 
             var smallItemIndex = 0;
             var bigItemIndex = itemSizeList.Length - 1;
-            var smallItemIndexPosition = 0f;
             var bigItemIndexPosition = itemSizeList.Sum() + itemInterval * (itemSizeList.Length - 1);
 
             if (bigItemIndexPosition <= CurrentPosition)
@@ -463,7 +462,6 @@ namespace Scrmizu
                     if (middleItemIndexPosition <= CurrentPosition)
                     {
                         smallItemIndex = middleItemIndex;
-                        smallItemIndexPosition = middleItemIndexPosition;
                     }
                     else if (middleItemIndexPosition > CurrentPosition)
                     {
