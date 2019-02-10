@@ -565,6 +565,74 @@ namespace Scrmizu
                 UpdateBounds();
             }
         }
+
+        protected virtual void LateUpdate()
+        {
+            if (!content)
+                return;
+
+            EnsureLayoutHasRebuilt();
+            UpdateBounds();
+            float deltaTime = Time.unscaledDeltaTime;
+            Vector2 offset = CalculateOffset(Vector2.zero);
+            if (!_dragging && (offset != Vector2.zero || _velocity != Vector2.zero))
+            {
+                Vector2 position = content.anchoredPosition;
+                for (int axis = 0; axis < 2; axis++)
+                {
+                    // Apply spring physics if movement is elastic and content has an offset from the view.
+                    if (movementType == MovementType.Elastic && offset[axis] != 0)
+                    {
+                        float speed = _velocity[axis];
+                        position[axis] = Mathf.SmoothDamp(content.anchoredPosition[axis], content.anchoredPosition[axis] + offset[axis], ref speed, elasticity, Mathf.Infinity, deltaTime);
+                        if (Mathf.Abs(speed) < 1)
+                            speed = 0;
+                        _velocity[axis] = speed;
+                    }
+                    // Else move content according to velocity with deceleration applied.
+                    else if (inertia)
+                    {
+                        _velocity[axis] *= Mathf.Pow(decelerationRate, deltaTime);
+                        if (Mathf.Abs(_velocity[axis]) < 1)
+                            _velocity[axis] = 0;
+                        position[axis] += _velocity[axis] * deltaTime;
+                    }
+                    // If we have neither elaticity or friction, there shouldn't be any velocity.
+                    else
+                    {
+                        _velocity[axis] = 0;
+                    }
+                }
+
+                if (movementType == MovementType.Clamped)
+                {
+                    offset = CalculateOffset(position - content.anchoredPosition);
+                    position += offset;
+                }
+
+                SetContentAnchoredPosition(position);
+            }
+
+            if (_dragging && inertia)
+            {
+                Vector3 newVelocity = (content.anchoredPosition - _prevPosition) / deltaTime;
+                _velocity = Vector3.Lerp(_velocity, newVelocity, deltaTime * 10);
+            }
+
+            if (_viewBounds != _prevViewBounds || _contentBounds != _prevContentBounds || content.anchoredPosition != _prevPosition)
+            {
+                UpdateScrollbars(offset);
+                UISystemProfilerApi.AddMarker("ScrollRect.value", this);
+                onValueChanged.Invoke(new Vector2
+                {
+                    x = direction == Direction.Horizontal ? NormalizedPosition : 0,
+                    y = direction == Direction.Vertical ? NormalizedPosition : 0
+                });
+                UpdatePrevData();
+            }
+            UpdateScrollbarVisibility();
+        }
+
         /// <summary>
         /// Helper function to update the previous data fields on a ScrollRect. Call this before you change data in the ScrollRect.
         /// </summary>
@@ -708,6 +776,10 @@ namespace Scrmizu
         {
             return InternalCalculateOffset(ref _viewBounds, ref _contentBounds, direction, movementType, ref delta);
         }
+        private void UpdateScrollbarVisibility()
+        {
+            UpdateOneScrollbarVisibility(ScrollingNeeded, scrollbarVisibility, scrollbar);
+        }
 
         internal static Vector2 InternalCalculateOffset(ref Bounds viewBounds, ref Bounds contentBounds, Direction direction, MovementType movementType, ref Vector2 delta)
         {
@@ -777,6 +849,22 @@ namespace Scrmizu
         private static float RubberDelta(float overStretching, float viewSize)
         {
             return (1 - (1 / ((Mathf.Abs(overStretching) * 0.55f / viewSize) + 1))) * viewSize * Mathf.Sign(overStretching);
+        }
+        private static void UpdateOneScrollbarVisibility(bool xScrollingNeeded, ScrollbarVisibility scrollbarVisibility, Scrollbar scrollbar)
+        {
+            if (scrollbar)
+            {
+                if (scrollbarVisibility == ScrollbarVisibility.Permanent)
+                {
+                    if (scrollbar.gameObject.activeSelf != true)
+                        scrollbar.gameObject.SetActive(true);
+                }
+                else
+                {
+                    if (scrollbar.gameObject.activeSelf != xScrollingNeeded)
+                        scrollbar.gameObject.SetActive(xScrollingNeeded);
+                }
+            }
         }
     }
 }
