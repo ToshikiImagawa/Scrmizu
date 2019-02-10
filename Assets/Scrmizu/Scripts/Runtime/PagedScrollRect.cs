@@ -258,6 +258,24 @@ namespace Scrmizu
                 return true;
             }
         }
+        /// <summary>
+        /// Called by the layout system.
+        /// </summary>
+        public virtual void CalculateLayoutInputHorizontal() { }
+
+        /// <summary>
+        /// Called by the layout system.
+        /// </summary>
+        public virtual void CalculateLayoutInputVertical() { }
+
+        public virtual void LayoutComplete() { }
+
+        public virtual void GraphicUpdateComplete() { }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="executing"></param>
         public virtual void Rebuild(CanvasUpdate executing)
         {
             if (executing == CanvasUpdate.Prelayout)
@@ -275,57 +293,189 @@ namespace Scrmizu
             }
         }
         /// <summary>
-        /// Called by the layout system.
+        /// Handling for when the content is beging being dragged.
         /// </summary>
-        public virtual void CalculateLayoutInputHorizontal() { }
+        /// <param name="eventData"></param>
+        public virtual void OnBeginDrag(PointerEventData eventData)
+        {
+            if (eventData.button != PointerEventData.InputButton.Left)
+                return;
 
+            if (!IsActive())
+                return;
+
+            UpdateBounds();
+
+            pointerStartLocalCursor = Vector2.zero;
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(ViewRect, eventData.position, eventData.pressEventCamera, out pointerStartLocalCursor);
+            contentStartPosition = content.anchoredPosition;
+            _dragging = true;
+        }
         /// <summary>
-        /// Called by the layout system.
+        /// Handling for when the content is dragged.
         /// </summary>
-        public virtual void CalculateLayoutInputVertical() { }
-
-        public virtual void LayoutComplete() { }
-
-        public virtual void GraphicUpdateComplete() { }
-
-        void ICanvasElement.Rebuild(CanvasUpdate executing)
+        /// <param name="eventData"></param>
+        public virtual void OnDrag(PointerEventData eventData)
         {
-            throw new System.NotImplementedException();
+            if (eventData.button != PointerEventData.InputButton.Left)
+                return;
+
+            if (!IsActive())
+                return;
+
+            Vector2 localCursor;
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(ViewRect, eventData.position, eventData.pressEventCamera, out localCursor))
+                return;
+
+            UpdateBounds();
+
+            var pointerDelta = localCursor - pointerStartLocalCursor;
+            Vector2 position = contentStartPosition + pointerDelta;
+
+            // Offset to get content into place in the view.
+            Vector2 offset = CalculateOffset(position - content.anchoredPosition);
+            position += offset;
+            if (movementType == MovementType.Elastic)
+            {
+                if (offset.x != 0)
+                    position.x = position.x - RubberDelta(offset.x, _viewBounds.size.x);
+                if (offset.y != 0)
+                    position.y = position.y - RubberDelta(offset.y, _viewBounds.size.y);
+            }
+
+            SetContentAnchoredPosition(position);
+        }
+        /// <summary>
+        /// Handling for when the content has finished being dragged.
+        /// </summary>
+        /// <param name="eventData"></param>
+        public virtual void OnEndDrag(PointerEventData eventData)
+        {
+            if (eventData.button != PointerEventData.InputButton.Left)
+                return;
+
+            _dragging = false;
         }
 
-        void IBeginDragHandler.OnBeginDrag(PointerEventData eventData)
+        public virtual void OnInitializePotentialDrag(PointerEventData eventData)
         {
-            throw new System.NotImplementedException();
+            if (eventData.button != PointerEventData.InputButton.Left)
+                return;
+
+            _velocity = Vector2.zero;
         }
 
-        void IDragHandler.OnDrag(PointerEventData eventData)
+        public virtual void OnScroll(PointerEventData eventData)
         {
-            throw new System.NotImplementedException();
+            if (!IsActive())
+                return;
+
+            EnsureLayoutHasRebuilt();
+            UpdateBounds();
+
+            Vector2 delta = eventData.scrollDelta;
+            // Down is positive for scroll events, while in UI system up is positive.
+            delta.y *= -1;
+
+            switch (direction)
+            {
+                case Direction.Vertical:
+                    if (Mathf.Abs(delta.x) > Mathf.Abs(delta.y))
+                        delta.y = delta.x;
+                    delta.x = 0;
+                    break;
+                case Direction.Horizontal:
+                    if (Mathf.Abs(delta.y) > Mathf.Abs(delta.x))
+                        delta.x = delta.y;
+                    delta.y = 0;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            Vector2 position = content.anchoredPosition;
+            position += delta * scrollSensitivity;
+            if (movementType == MovementType.Clamped)
+                position += CalculateOffset(position - content.anchoredPosition);
+
+            SetContentAnchoredPosition(position);
+            UpdateBounds();
         }
 
-        void IEndDragHandler.OnEndDrag(PointerEventData eventData)
+        public virtual void SetLayoutHorizontal()
         {
-            throw new System.NotImplementedException();
-        }
+            _tracker.Clear();
 
-        void IInitializePotentialDragHandler.OnInitializePotentialDrag(PointerEventData eventData)
-        {
-            throw new System.NotImplementedException();
-        }
+            if (_sliderExpand || _sliderExpand)
+            {
+                _tracker.Add(this, ViewRect,
+                    DrivenTransformProperties.Anchors |
+                    DrivenTransformProperties.SizeDelta |
+                    DrivenTransformProperties.AnchoredPosition);
 
-        void IScrollHandler.OnScroll(PointerEventData eventData)
-        {
-            throw new System.NotImplementedException();
-        }
+                // Make view full size to see if content fits.
+                ViewRect.anchorMin = Vector2.zero;
+                ViewRect.anchorMax = Vector2.one;
+                ViewRect.sizeDelta = Vector2.zero;
+                ViewRect.anchoredPosition = Vector2.zero;
 
-        void ILayoutController.SetLayoutHorizontal()
-        {
-            throw new System.NotImplementedException();
+                // Recalculate content layout with this size to see if it fits when there are no scrollbars.
+                LayoutRebuilder.ForceRebuildLayoutImmediate(content);
+                _viewBounds = new Bounds(ViewRect.rect.center, ViewRect.rect.size);
+                _contentBounds = GetBounds();
+            }
+
+            // If it doesn't fit vertically, enable vertical scrollbar and shrink view horizontally to make room for it.
+            if (_sliderExpand && ScrollingNeeded)
+            {
+                switch (direction)
+                {
+                    case Direction.Vertical:
+                        ViewRect.sizeDelta = new Vector2(-(_sliderLength + scrollbarSpacing), ViewRect.sizeDelta.y);
+                        LayoutRebuilder.ForceRebuildLayoutImmediate(content);
+                        break;
+                    case Direction.Horizontal:
+                        ViewRect.sizeDelta = new Vector2(ViewRect.sizeDelta.x, -(_sliderLength + scrollbarSpacing));
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+                _viewBounds = new Bounds(ViewRect.rect.center, ViewRect.rect.size);
+                _contentBounds = GetBounds();
+                if (direction == Direction.Vertical && ViewRect.sizeDelta.x == 0 && ViewRect.sizeDelta.y < 0)
+                    ViewRect.sizeDelta = new Vector2(-(_sliderLength + scrollbarSpacing), ViewRect.sizeDelta.y);
+
+            }
         }
 
         void ILayoutController.SetLayoutVertical()
         {
-            throw new System.NotImplementedException();
+            UpdateScrollbarLayout();
+            _viewBounds = new Bounds(ViewRect.rect.center, ViewRect.rect.size);
+            _contentBounds = GetBounds();
+        }
+
+        /// <summary>
+        /// Sets the anchored position of the content.
+        /// </summary>
+        protected virtual void SetContentAnchoredPosition(Vector2 position)
+        {
+            switch (direction)
+            {
+                case Direction.Vertical:
+                    position.x = content.anchoredPosition.x;
+                    break;
+                case Direction.Horizontal:
+                    position.y = content.anchoredPosition.y;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+            if (position != content.anchoredPosition)
+            {
+                content.anchoredPosition = position;
+                UpdateBounds();
+            }
         }
 
         /// <summary>
@@ -456,6 +606,38 @@ namespace Scrmizu
 
 #endif
 
+        private void UpdateScrollbarLayout()
+        {
+            if (!_sliderExpand || !scrollbar) return;
+            switch (direction)
+            {
+                case Direction.Vertical:
+                    _tracker.Add(this, _scrollbarRect,
+                        DrivenTransformProperties.AnchorMinY |
+                        DrivenTransformProperties.AnchorMaxY |
+                        DrivenTransformProperties.SizeDeltaY |
+                        DrivenTransformProperties.AnchoredPositionY);
+                    _scrollbarRect.anchorMin = new Vector2(_scrollbarRect.anchorMin.x, 0);
+                    _scrollbarRect.anchorMax = new Vector2(_scrollbarRect.anchorMax.x, 1);
+                    _scrollbarRect.anchoredPosition = new Vector2(_scrollbarRect.anchoredPosition.x, 0);
+                    _scrollbarRect.sizeDelta = new Vector2(_scrollbarRect.sizeDelta.x, 0);
+                    break;
+                case Direction.Horizontal:
+                    _tracker.Add(this, _scrollbarRect,
+                        DrivenTransformProperties.AnchorMinX |
+                        DrivenTransformProperties.AnchorMaxX |
+                        DrivenTransformProperties.SizeDeltaX |
+                        DrivenTransformProperties.AnchoredPositionX);
+                    _scrollbarRect.anchorMin = new Vector2(0, _scrollbarRect.anchorMin.y);
+                    _scrollbarRect.anchorMax = new Vector2(1, _scrollbarRect.anchorMax.y);
+                    _scrollbarRect.anchoredPosition = new Vector2(0, _scrollbarRect.anchoredPosition.y);
+                    _scrollbarRect.sizeDelta = new Vector2(0, _scrollbarRect.sizeDelta.y);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
         private void UpdateCachedData()
         {
             var transform = this.transform;
@@ -522,6 +704,44 @@ namespace Scrmizu
             return InternalGetBounds(_corners, ref viewWorldToLocalMatrix);
         }
 
+        private Vector2 CalculateOffset(Vector2 delta)
+        {
+            return InternalCalculateOffset(ref _viewBounds, ref _contentBounds, direction, movementType, ref delta);
+        }
+
+        internal static Vector2 InternalCalculateOffset(ref Bounds viewBounds, ref Bounds contentBounds, Direction direction, MovementType movementType, ref Vector2 delta)
+        {
+            Vector2 offset = Vector2.zero;
+            if (movementType == MovementType.Unrestricted)
+                return offset;
+
+            Vector2 min = contentBounds.min;
+            Vector2 max = contentBounds.max;
+
+            switch (direction)
+            {
+                case Direction.Vertical:
+                    min.y += delta.y;
+                    max.y += delta.y;
+                    if (max.y < viewBounds.max.y)
+                        offset.y = viewBounds.max.y - max.y;
+                    else if (min.y > viewBounds.min.y)
+                        offset.y = viewBounds.min.y - min.y;
+                    break;
+                case Direction.Horizontal:
+                    min.x += delta.x;
+                    max.x += delta.x;
+                    if (min.x > viewBounds.min.x)
+                        offset.x = viewBounds.min.x - min.x;
+                    else if (max.x < viewBounds.max.x)
+                        offset.x = viewBounds.max.x - max.x;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+
+            }
+            return offset;
+        }
         internal static Bounds InternalGetBounds(Vector3[] corners, ref Matrix4x4 viewWorldToLocalMatrix)
         {
             var vMin = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
@@ -552,6 +772,11 @@ namespace Scrmizu
                 contentPos.y -= excess.y * (contentPivot.y - 0.5f);
                 contentSize.y = viewBounds.size.y;
             }
+        }
+
+        private static float RubberDelta(float overStretching, float viewSize)
+        {
+            return (1 - (1 / ((Mathf.Abs(overStretching) * 0.55f / viewSize) + 1))) * viewSize * Mathf.Sign(overStretching);
         }
     }
 }
