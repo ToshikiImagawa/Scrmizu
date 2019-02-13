@@ -15,8 +15,10 @@ namespace Scrmizu
         IDragHandler, IScrollHandler, ICanvasElement, ILayoutElement, ILayoutGroup
     {
         [SerializeField] private RectTransform content;
-        [SerializeField] private bool horizontal = true;
-        [SerializeField] private bool vertical = true;
+
+        [SerializeField, Tooltip("Direction of scroll.")]
+        private Direction direction = Direction.Vertical;
+
         [SerializeField] private MovementType movementType = MovementType.Elastic;
 
         [SerializeField] private float elasticity = 0.1f;
@@ -25,8 +27,7 @@ namespace Scrmizu
         [SerializeField] private float decelerationRate = 0.135f; // Only used when inertia is enabled
         [SerializeField] private float scrollSensitivity = 1.0f;
         [SerializeField] private RectTransform viewport;
-        [SerializeField] private Scrollbar horizontalScrollbar;
-        [SerializeField] private Scrollbar verticalScrollbar;
+        [SerializeField] private Scrollbar scrollbar;
         [SerializeField] private ScrollbarVisibility horizontalScrollbarVisibility;
 
         [SerializeField] private ScrollbarVisibility verticalScrollbarVisibility;
@@ -56,13 +57,7 @@ namespace Scrmizu
         private Bounds _prevContentBounds;
         private Bounds _prevViewBounds;
 
-        private bool _hSliderExpand;
-        private bool _vSliderExpand;
-        private float _hSliderHeight;
-        private float _vSliderWidth;
-
-        private RectTransform _horizontalScrollbarRect;
-        private RectTransform _verticalScrollbarRect;
+        private RectTransform _scrollbarRect;
 
         private DrivenRectTransformTracker _tracker = new DrivenRectTransformTracker();
 
@@ -76,21 +71,12 @@ namespace Scrmizu
         }
 
         /// <summary>
-        /// Should horizontal scrolling be enabled?
+        /// Direction of scroll.
         /// </summary>
-        public bool Horizontal
+        public Direction Direction
         {
-            get => horizontal;
-            set => horizontal = value;
-        }
-
-        /// <summary>
-        /// Should vertical scrolling be enabled?
-        /// </summary>
-        public bool Vertical
-        {
-            get => vertical;
-            set => vertical = value;
+            get => direction;
+            set => direction = value;
         }
 
         /// <summary>
@@ -162,36 +148,20 @@ namespace Scrmizu
             }
         }
 
-        /// <summary>
-        /// Optional Scrollbar object linked to the horizontal scrolling of the ScrollRect.
-        /// </summary>
-        public Scrollbar HorizontalScrollbar
-        {
-            get => horizontalScrollbar;
-            set
-            {
-                if (horizontalScrollbar)
-                    horizontalScrollbar.onValueChanged.RemoveListener(SetHorizontalNormalizedPosition);
-                horizontalScrollbar = value;
-                if (horizontalScrollbar)
-                    horizontalScrollbar.onValueChanged.AddListener(SetHorizontalNormalizedPosition);
-                SetDirtyCaching();
-            }
-        }
 
         /// <summary>
-        /// Optional Scrollbar object linked to the vertical scrolling of the ScrollRect.
+        /// Optional Scrollbar object linked to the scrolling of the ScrollRect.
         /// </summary>
-        public Scrollbar VerticalScrollbar
+        public Scrollbar Scrollbar
         {
-            get => verticalScrollbar;
+            get => scrollbar;
             set
             {
-                if (verticalScrollbar)
-                    verticalScrollbar.onValueChanged.RemoveListener(SetVerticalNormalizedPosition);
-                verticalScrollbar = value;
-                if (verticalScrollbar)
-                    verticalScrollbar.onValueChanged.AddListener(SetVerticalNormalizedPosition);
+                if (scrollbar)
+                    scrollbar.onValueChanged.RemoveListener(SetNormalizedPosition);
+                scrollbar = value;
+                if (scrollbar)
+                    scrollbar.onValueChanged.AddListener(SetNormalizedPosition);
                 SetDirtyCaching();
             }
         }
@@ -256,18 +226,6 @@ namespace Scrmizu
         {
             get => onValueChanged;
             set => onValueChanged = value;
-        }
-
-        protected RectTransform ViewRect
-        {
-            get
-            {
-                if (_viewRect == null)
-                    _viewRect = viewport;
-                if (_viewRect == null)
-                    _viewRect = (RectTransform) transform;
-                return _viewRect;
-            }
         }
 
         /// <summary>
@@ -370,6 +328,22 @@ namespace Scrmizu
         /// <inheritdoc />
         public virtual int layoutPriority => -1;
 
+        protected RectTransform ViewRect
+        {
+            get
+            {
+                if (_viewRect == null)
+                    _viewRect = viewport;
+                if (_viewRect == null)
+                    _viewRect = (RectTransform) transform;
+                return _viewRect;
+            }
+        }
+
+        private bool Horizontal => direction == Direction.Horizontal;
+
+        private bool Vertical => direction == Direction.Vertical;
+
         private bool HScrollingNeeded
         {
             get
@@ -399,7 +373,6 @@ namespace Scrmizu
             switch (executing)
             {
                 case CanvasUpdate.Prelayout:
-                    UpdateCachedData();
                     break;
                 case CanvasUpdate.PostLayout:
                     UpdateBounds();
@@ -555,10 +528,8 @@ namespace Scrmizu
         {
             base.OnEnable();
 
-            if (horizontalScrollbar)
-                horizontalScrollbar.onValueChanged.AddListener(SetHorizontalNormalizedPosition);
-            if (verticalScrollbar)
-                verticalScrollbar.onValueChanged.AddListener(SetVerticalNormalizedPosition);
+            if (scrollbar)
+                scrollbar.onValueChanged.AddListener(SetNormalizedPosition);
 
             CanvasUpdateRegistry.RegisterCanvasElementForLayoutRebuild(this);
             SetDirty();
@@ -568,10 +539,8 @@ namespace Scrmizu
         {
             CanvasUpdateRegistry.UnRegisterCanvasElementForRebuild(this);
 
-            if (horizontalScrollbar)
-                horizontalScrollbar.onValueChanged.RemoveListener(SetHorizontalNormalizedPosition);
-            if (verticalScrollbar)
-                verticalScrollbar.onValueChanged.RemoveListener(SetVerticalNormalizedPosition);
+            if (scrollbar)
+                scrollbar.onValueChanged.RemoveListener(SetNormalizedPosition);
 
             _hasRebuiltLayout = false;
             _tracker.Clear();
@@ -616,9 +585,9 @@ namespace Scrmizu
         /// </summary>
         protected virtual void SetContentAnchoredPosition(Vector2 position)
         {
-            if (!horizontal)
+            if (!Horizontal)
                 position.x = content.anchoredPosition.x;
-            if (!vertical)
+            if (!Vertical)
                 position.y = content.anchoredPosition.y;
 
             if (position == content.anchoredPosition) return;
@@ -783,34 +752,11 @@ namespace Scrmizu
 
             if (!(delta.sqrMagnitude > float.Epsilon)) return;
             contentPos = content.anchoredPosition + delta;
-            if (!horizontal)
+            if (!Horizontal)
                 contentPos.x = content.anchoredPosition.x;
-            if (!vertical)
+            if (!Vertical)
                 contentPos.y = content.anchoredPosition.y;
             AdjustBounds(ref _viewBounds, ref contentPivot, ref contentSize, ref contentPos);
-        }
-
-        private void UpdateCachedData()
-        {
-            var trans = transform;
-            _horizontalScrollbarRect =
-                horizontalScrollbar == null ? null : horizontalScrollbar.transform as RectTransform;
-            _verticalScrollbarRect = verticalScrollbar == null ? null : verticalScrollbar.transform as RectTransform;
-
-            // These are true if either the elements are children, or they don't exist at all.
-            var viewIsChild = (ViewRect.parent == trans);
-            var hScrollbarIsChild = _horizontalScrollbarRect != null &&
-                                    (!_horizontalScrollbarRect || _horizontalScrollbarRect.parent == trans);
-            var vScrollbarIsChild = _verticalScrollbarRect != null &&
-                                    (!_verticalScrollbarRect || _verticalScrollbarRect.parent == trans);
-            var allAreChildren = (viewIsChild && hScrollbarIsChild && vScrollbarIsChild);
-
-            _hSliderExpand = allAreChildren && _horizontalScrollbarRect &&
-                             HorizontalScrollbarVisibility == ScrollbarVisibility.AutoHideAndExpandViewport;
-            _vSliderExpand = allAreChildren && _verticalScrollbarRect &&
-                             VerticalScrollbarVisibility == ScrollbarVisibility.AutoHideAndExpandViewport;
-            _hSliderHeight = (_horizontalScrollbarRect == null ? 0 : _horizontalScrollbarRect.rect.height);
-            _vSliderWidth = (_verticalScrollbarRect == null ? 0 : _verticalScrollbarRect.rect.width);
         }
 
         private RectTransform RectTransform
@@ -831,35 +777,35 @@ namespace Scrmizu
 
         private void UpdateScrollbars(Vector2 offset)
         {
-            if (horizontalScrollbar)
+            if (scrollbar == null) return;
+            switch (direction)
             {
-                if (ContentBounds.size.x > 0)
-                    horizontalScrollbar.size =
-                        Mathf.Clamp01((_viewBounds.size.x - Mathf.Abs(offset.x)) / ContentBounds.size.x);
-                else
-                    horizontalScrollbar.size = 1;
+                case Direction.Vertical:
+                    if (ContentBounds.size.y > 0)
+                        scrollbar.size =
+                            Mathf.Clamp01((_viewBounds.size.y - Mathf.Abs(offset.y)) / ContentBounds.size.y);
+                    else
+                        scrollbar.size = 1;
 
-                horizontalScrollbar.value = HorizontalNormalizedPosition;
+                    scrollbar.value = VerticalNormalizedPosition;
+                    break;
+                case Direction.Horizontal:
+                    if (ContentBounds.size.x > 0)
+                        scrollbar.size =
+                            Mathf.Clamp01((_viewBounds.size.x - Mathf.Abs(offset.x)) / ContentBounds.size.x);
+                    else
+                        scrollbar.size = 1;
+
+                    scrollbar.value = HorizontalNormalizedPosition;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
-
-            if (!verticalScrollbar) return;
-            if (ContentBounds.size.y > 0)
-                verticalScrollbar.size =
-                    Mathf.Clamp01((_viewBounds.size.y - Mathf.Abs(offset.y)) / ContentBounds.size.y);
-            else
-                verticalScrollbar.size = 1;
-
-            verticalScrollbar.value = VerticalNormalizedPosition;
         }
 
-        private void SetHorizontalNormalizedPosition(float value)
+        private void SetNormalizedPosition(float value)
         {
-            SetNormalizedPosition(value, 0);
-        }
-
-        private void SetVerticalNormalizedPosition(float value)
-        {
-            SetNormalizedPosition(value, 1);
+            SetNormalizedPosition(value, Horizontal ? 0 : 1);
         }
 
         private static float RubberDelta(float overStretching, float viewSize)
@@ -885,68 +831,28 @@ namespace Scrmizu
         public virtual void SetLayoutHorizontal()
         {
             _tracker.Clear();
-
-            if (_hSliderExpand || _vSliderExpand)
-            {
-                _tracker.Add(this, ViewRect,
-                    DrivenTransformProperties.Anchors |
-                    DrivenTransformProperties.SizeDelta |
-                    DrivenTransformProperties.AnchoredPosition);
-
-                // Make view full size to see if content fits.
-                ViewRect.anchorMin = Vector2.zero;
-                ViewRect.anchorMax = Vector2.one;
-                ViewRect.sizeDelta = Vector2.zero;
-                ViewRect.anchoredPosition = Vector2.zero;
-
-                // Recalculate content layout with this size to see if it fits when there are no scrollbars.
-                LayoutRebuilder.ForceRebuildLayoutImmediate(Content);
-                _viewBounds = new Bounds(ViewRect.rect.center, ViewRect.rect.size);
-                ContentBounds = GetBounds();
-            }
-
-            // If it doesn't fit vertically, enable vertical scrollbar and shrink view horizontally to make room for it.
-            if (_vSliderExpand && VScrollingNeeded)
-            {
-                ViewRect.sizeDelta = new Vector2(-(_vSliderWidth + verticalScrollbarSpacing), ViewRect.sizeDelta.y);
-
-                // Recalculate content layout with this size to see if it fits vertically
-                // when there is a vertical scrollbar (which may reflowed the content to make it taller).
-                LayoutRebuilder.ForceRebuildLayoutImmediate(Content);
-                _viewBounds = new Bounds(ViewRect.rect.center, ViewRect.rect.size);
-                ContentBounds = GetBounds();
-            }
-
-            // If it doesn't fit horizontally, enable horizontal scrollbar and shrink view vertically to make room for it.
-            if (_hSliderExpand && HScrollingNeeded)
-            {
-                ViewRect.sizeDelta =
-                    new Vector2(ViewRect.sizeDelta.x, -(_hSliderHeight + horizontalScrollbarSpacing));
-                _viewBounds = new Bounds(ViewRect.rect.center, ViewRect.rect.size);
-                ContentBounds = GetBounds();
-            }
-
-            // If the vertical slider didn't kick in the first time, and the horizontal one did,
-            // we need to check again if the vertical slider now needs to kick in.
-            // If it doesn't fit vertically, enable vertical scrollbar and shrink view horizontally to make room for it.
-            if (_vSliderExpand && VScrollingNeeded && ViewRect.sizeDelta.x == 0 && ViewRect.sizeDelta.y < 0)
-            {
-                ViewRect.sizeDelta = new Vector2(-(_vSliderWidth + verticalScrollbarSpacing), ViewRect.sizeDelta.y);
-            }
         }
 
         public virtual void SetLayoutVertical()
         {
-            UpdateScrollbarLayout();
             _viewBounds = new Bounds(ViewRect.rect.center, ViewRect.rect.size);
             ContentBounds = GetBounds();
         }
 
         void UpdateScrollbarVisibility()
         {
-            UpdateOneScrollbarVisibility(VScrollingNeeded, vertical, verticalScrollbarVisibility, verticalScrollbar);
-            UpdateOneScrollbarVisibility(HScrollingNeeded, horizontal, horizontalScrollbarVisibility,
-                horizontalScrollbar);
+            switch (direction)
+            {
+                case Direction.Vertical:
+                    UpdateOneScrollbarVisibility(VScrollingNeeded, Vertical, verticalScrollbarVisibility, scrollbar);
+                    break;
+                case Direction.Horizontal:
+                    UpdateOneScrollbarVisibility(HScrollingNeeded, Horizontal, horizontalScrollbarVisibility,
+                        scrollbar);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
 
         private static void UpdateOneScrollbarVisibility(bool xScrollingNeeded, bool xAxisEnabled,
@@ -964,43 +870,6 @@ namespace Scrmizu
                     scrollbar.gameObject.SetActive(xScrollingNeeded);
             }
         }
-
-        void UpdateScrollbarLayout()
-        {
-            if (_vSliderExpand && horizontalScrollbar)
-            {
-                _tracker.Add(this, _horizontalScrollbarRect,
-                    DrivenTransformProperties.AnchorMinX |
-                    DrivenTransformProperties.AnchorMaxX |
-                    DrivenTransformProperties.SizeDeltaX |
-                    DrivenTransformProperties.AnchoredPositionX);
-                _horizontalScrollbarRect.anchorMin = new Vector2(0, _horizontalScrollbarRect.anchorMin.y);
-                _horizontalScrollbarRect.anchorMax = new Vector2(1, _horizontalScrollbarRect.anchorMax.y);
-                _horizontalScrollbarRect.anchoredPosition =
-                    new Vector2(0, _horizontalScrollbarRect.anchoredPosition.y);
-                if (VScrollingNeeded)
-                    _horizontalScrollbarRect.sizeDelta = new Vector2(-(_vSliderWidth + verticalScrollbarSpacing),
-                        _horizontalScrollbarRect.sizeDelta.y);
-                else
-                    _horizontalScrollbarRect.sizeDelta = new Vector2(0, _horizontalScrollbarRect.sizeDelta.y);
-            }
-
-            if (!_hSliderExpand || !verticalScrollbar) return;
-            _tracker.Add(this, _verticalScrollbarRect,
-                DrivenTransformProperties.AnchorMinY |
-                DrivenTransformProperties.AnchorMaxY |
-                DrivenTransformProperties.SizeDeltaY |
-                DrivenTransformProperties.AnchoredPositionY);
-            _verticalScrollbarRect.anchorMin = new Vector2(_verticalScrollbarRect.anchorMin.x, 0);
-            _verticalScrollbarRect.anchorMax = new Vector2(_verticalScrollbarRect.anchorMax.x, 1);
-            _verticalScrollbarRect.anchoredPosition = new Vector2(_verticalScrollbarRect.anchoredPosition.x, 0);
-            if (HScrollingNeeded)
-                _verticalScrollbarRect.sizeDelta = new Vector2(_verticalScrollbarRect.sizeDelta.x,
-                    -(_hSliderHeight + horizontalScrollbarSpacing));
-            else
-                _verticalScrollbarRect.sizeDelta = new Vector2(_verticalScrollbarRect.sizeDelta.x, 0);
-        }
-
 
         internal static void AdjustBounds(ref Bounds viewBounds, ref Vector2 contentPivot, ref Vector3 contentSize,
             ref Vector3 contentPos)
@@ -1056,7 +925,7 @@ namespace Scrmizu
 
         private Vector2 CalculateOffset(Vector2 delta)
         {
-            return InternalCalculateOffset(ref _viewBounds, ref ContentBounds, horizontal, vertical, movementType,
+            return InternalCalculateOffset(ref _viewBounds, ref ContentBounds, Horizontal, Vertical, movementType,
                 ref delta);
         }
 
