@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657868, g: 0.49641263, b: 0.57481706, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657844, g: 0.49641222, b: 0.57481694, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -341,7 +341,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 349519996}
-  - component: {fileID: 349519999}
+  - component: {fileID: 349519997}
   m_Layer: 5
   m_Name: Scroll View
   m_TagString: Untagged
@@ -370,7 +370,7 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 10}
   m_SizeDelta: {x: 0, y: -20}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &349519999
+--- !u!114 &349519997
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -379,25 +379,25 @@ MonoBehaviour:
   m_GameObject: {fileID: 349519995}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 1367256648, guid: f70555f144d8491a825f0804e09c671c, type: 3}
+  m_Script: {fileID: 11500000, guid: 511bf31314f81a441990a223528a38d4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Content: {fileID: 2042311266}
-  m_Horizontal: 1
-  m_Vertical: 0
-  m_MovementType: 1
-  m_Elasticity: 0.1
-  m_Inertia: 1
-  m_DecelerationRate: 0.135
-  m_ScrollSensitivity: 1
-  m_Viewport: {fileID: 2127822803}
-  m_HorizontalScrollbar: {fileID: 1704530701}
-  m_VerticalScrollbar: {fileID: 0}
-  m_HorizontalScrollbarVisibility: 2
-  m_VerticalScrollbarVisibility: 2
-  m_HorizontalScrollbarSpacing: -3
-  m_VerticalScrollbarSpacing: -3
-  m_OnValueChanged:
+  content: {fileID: 2042311266}
+  horizontal: 1
+  vertical: 0
+  movementType: 1
+  elasticity: 0.1
+  inertia: 1
+  decelerationRate: 0.135
+  scrollSensitivity: 1
+  viewport: {fileID: 2127822803}
+  horizontalScrollbar: {fileID: 1704530701}
+  verticalScrollbar: {fileID: 0}
+  horizontalScrollbarVisibility: 2
+  verticalScrollbarVisibility: 0
+  horizontalScrollbarSpacing: -3
+  verticalScrollbarSpacing: 0
+  onValueChanged:
     m_PersistentCalls:
       m_Calls: []
     m_TypeName: UnityEngine.UI.ScrollRect+ScrollRectEvent, UnityEngine.UI, Version=1.0.0.0,
@@ -656,7 +656,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 1640078517}
   m_Direction: 2
   m_Value: 0
-  m_Size: 1
+  m_Size: 0.999956
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -1385,7 +1385,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -0.00013877929}
+  m_AnchoredPosition: {x: 0, y: 0.00018748293}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!1 &1112052115
@@ -1519,7 +1519,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: -0.0001219218, y: 0}
+  m_AnchoredPosition: {x: 0.00010863186, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!1 &1128689421
@@ -1909,8 +1909,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1434787987}
   m_HandleRect: {fileID: 1434787986}
   m_Direction: 0
-  m_Value: 1
-  m_Size: 0.9999999
+  m_Value: 0
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -2671,9 +2671,9 @@ RectTransform:
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: -27}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &2127822804
 MonoBehaviour:
