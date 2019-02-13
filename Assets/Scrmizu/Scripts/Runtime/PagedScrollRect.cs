@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -27,18 +28,12 @@ namespace Scrmizu
         [SerializeField] private float decelerationRate = 0.135f; // Only used when inertia is enabled
         [SerializeField] private float scrollSensitivity = 1.0f;
         [SerializeField] private RectTransform viewport;
-        [SerializeField] private Scrollbar scrollbar;
-        [SerializeField] private ScrollbarVisibility horizontalScrollbarVisibility;
-
-        [SerializeField] private ScrollbarVisibility verticalScrollbarVisibility;
-
-        [SerializeField] private float horizontalScrollbarSpacing;
-        [SerializeField] private float verticalScrollbarSpacing;
 
         [SerializeField] private ScrollRectEvent onValueChanged = new ScrollRectEvent();
 
         [NonSerialized] private bool _hasRebuiltLayout;
         [NonSerialized] private RectTransform _rect;
+        [NonSerialized] private List<RectTransform> _contentChildren = new List<RectTransform>();
 
         // The offset from handle position to mouse down position
         private Vector2 _pointerStartLocalCursor = Vector2.zero;
@@ -51,6 +46,9 @@ namespace Scrmizu
 
         private Vector2 _velocity;
 
+        private int _page;
+        private float _pagedPosition;
+
         private bool _dragging;
 
         private Vector2 _prevPosition = Vector2.zero;
@@ -61,6 +59,8 @@ namespace Scrmizu
 
         private DrivenRectTransformTracker _tracker = new DrivenRectTransformTracker();
 
+        private static readonly List<ILayoutIgnorer> ListPool = new List<ILayoutIgnorer>();
+
         /// <summary>
         /// The content that can be scrolled. It should be a child of the GameObject with ScrollRect on it.
         /// </summary>
@@ -69,6 +69,8 @@ namespace Scrmizu
             get => content;
             set => content = value;
         }
+
+        protected List<RectTransform> ContentChildren => _contentChildren;
 
         /// <summary>
         /// Direction of scroll.
@@ -109,7 +111,6 @@ namespace Scrmizu
             set => inertia = value;
         }
 
-
         /// <summary>
         /// The rate at which movement slows down.
         /// </summary>
@@ -148,77 +149,6 @@ namespace Scrmizu
             }
         }
 
-
-        /// <summary>
-        /// Optional Scrollbar object linked to the scrolling of the ScrollRect.
-        /// </summary>
-        public Scrollbar Scrollbar
-        {
-            get => scrollbar;
-            set
-            {
-                if (scrollbar)
-                    scrollbar.onValueChanged.RemoveListener(SetNormalizedPosition);
-                scrollbar = value;
-                if (scrollbar)
-                    scrollbar.onValueChanged.AddListener(SetNormalizedPosition);
-                SetDirtyCaching();
-            }
-        }
-
-        /// <summary>
-        /// The mode of visibility for the horizontal scrollbar.
-        /// </summary>
-        public ScrollbarVisibility HorizontalScrollbarVisibility
-        {
-            get => horizontalScrollbarVisibility;
-            set
-            {
-                horizontalScrollbarVisibility = value;
-                SetDirtyCaching();
-            }
-        }
-
-        /// <summary>
-        /// The mode of visibility for the vertical scrollbar.
-        /// </summary>
-        public ScrollbarVisibility VerticalScrollbarVisibility
-        {
-            get => verticalScrollbarVisibility;
-            set
-            {
-                verticalScrollbarVisibility = value;
-                SetDirtyCaching();
-            }
-        }
-
-        /// <summary>
-        /// The space between the scrollbar and the viewport.
-        /// </summary>
-        public float HorizontalScrollbarSpacing
-        {
-            get => horizontalScrollbarSpacing;
-            set
-            {
-                horizontalScrollbarSpacing = value;
-                SetDirty();
-            }
-        }
-
-
-        /// <summary>
-        /// The space between the scrollbar and the viewport.
-        /// </summary>
-        public float VerticalScrollbarSpacing
-        {
-            get => verticalScrollbarSpacing;
-            set
-            {
-                verticalScrollbarSpacing = value;
-                SetDirty();
-            }
-        }
-
         /// <summary>
         /// Callback executed when the position of the child changes.
         /// </summary>
@@ -240,6 +170,18 @@ namespace Scrmizu
             set => _velocity = value;
         }
 
+        /// <summary>
+        /// The current page.
+        /// </summary>
+        public int Page
+        {
+            get => _page;
+            set
+            {
+                _page = value;
+                UpdatePage();
+            }
+        }
 
         /// <summary>
         /// The scroll position as a Vector2 between (0,0) and (1,1) with (0,0) being the lower left corner.
@@ -364,6 +306,16 @@ namespace Scrmizu
             }
         }
 
+        private RectTransform RectTransform
+        {
+            get
+            {
+                if (_rect == null)
+                    _rect = GetComponent<RectTransform>();
+                return _rect;
+            }
+        }
+
         protected PagedScrollRect()
         {
         }
@@ -374,7 +326,6 @@ namespace Scrmizu
             {
                 case CanvasUpdate.PostLayout:
                     UpdateBounds();
-                    UpdateScrollbars(Vector2.zero);
                     UpdatePrevData();
 
                     _hasRebuiltLayout = true;
@@ -526,9 +477,6 @@ namespace Scrmizu
         {
             base.OnEnable();
 
-            if (scrollbar)
-                scrollbar.onValueChanged.AddListener(SetNormalizedPosition);
-
             CanvasUpdateRegistry.RegisterCanvasElementForLayoutRebuild(this);
             SetDirty();
         }
@@ -536,9 +484,6 @@ namespace Scrmizu
         protected override void OnDisable()
         {
             CanvasUpdateRegistry.UnRegisterCanvasElementForRebuild(this);
-
-            if (scrollbar)
-                scrollbar.onValueChanged.RemoveListener(SetNormalizedPosition);
 
             _hasRebuiltLayout = false;
             _tracker.Clear();
@@ -590,6 +535,7 @@ namespace Scrmizu
 
             if (position == content.anchoredPosition) return;
             content.anchoredPosition = position;
+            if (!_dragging) UpdatePage();
             UpdateBounds();
         }
 
@@ -601,19 +547,20 @@ namespace Scrmizu
             EnsureLayoutHasRebuilt();
             UpdateBounds();
             var deltaTime = Time.unscaledDeltaTime;
-            var offset = CalculateOffset(Vector2.zero);
-            if (!_dragging && (offset != Vector2.zero || _velocity != Vector2.zero))
+            var pagedOffset = CalculatePageOffset();
+
+            if (!_dragging && (pagedOffset != Vector2.zero || _velocity != Vector2.zero))
             {
                 var position = content.anchoredPosition;
                 for (var axis = 0; axis < 2; axis++)
                 {
                     // Apply spring physics if movement is elastic and content has an offset from the view.
-                    if (movementType == MovementType.Elastic && Math.Abs(offset[axis]) > 0)
+                    if (Math.Abs(pagedOffset[axis]) > 0)
                     {
                         var speed = _velocity[axis];
                         var anchoredPosition = content.anchoredPosition;
                         position[axis] = Mathf.SmoothDamp(anchoredPosition[axis],
-                            anchoredPosition[axis] + offset[axis], ref speed, elasticity, Mathf.Infinity,
+                            anchoredPosition[axis] + pagedOffset[axis], ref speed, elasticity, Mathf.Infinity,
                             deltaTime);
                         if (Mathf.Abs(speed) < 1)
                             speed = 0;
@@ -633,15 +580,52 @@ namespace Scrmizu
                         _velocity[axis] = 0;
                     }
                 }
-
-                if (movementType == MovementType.Clamped)
-                {
-                    offset = CalculateOffset(position - content.anchoredPosition);
-                    position += offset;
-                }
-
                 SetContentAnchoredPosition(position);
             }
+            else
+            {
+                var offset = CalculateOffset(Vector2.zero);
+                if (!_dragging && (offset != Vector2.zero || _velocity != Vector2.zero))
+                {
+                    var position = content.anchoredPosition;
+                    for (var axis = 0; axis < 2; axis++)
+                    {
+                        // Apply spring physics if movement is elastic and content has an offset from the view.
+                        if (movementType == MovementType.Elastic && Math.Abs(offset[axis]) > 0)
+                        {
+                            var speed = _velocity[axis];
+                            var anchoredPosition = content.anchoredPosition;
+                            position[axis] = Mathf.SmoothDamp(anchoredPosition[axis],
+                                anchoredPosition[axis] + offset[axis], ref speed, elasticity, Mathf.Infinity,
+                                deltaTime);
+                            if (Mathf.Abs(speed) < 1)
+                                speed = 0;
+                            _velocity[axis] = speed;
+                        }
+                        // Else move content according to velocity with deceleration applied.
+                        else if (inertia)
+                        {
+                            _velocity[axis] *= Mathf.Pow(decelerationRate, deltaTime);
+                            if (Mathf.Abs(_velocity[axis]) < 1)
+                                _velocity[axis] = 0;
+                            position[axis] += _velocity[axis] * deltaTime;
+                        }
+                        // If we have neither elaticity or friction, there shouldn't be any velocity.
+                        else
+                        {
+                            _velocity[axis] = 0;
+                        }
+                    }
+
+                    if (movementType == MovementType.Clamped)
+                    {
+                        offset = CalculateOffset(position - content.anchoredPosition);
+                        position += offset;
+                    }
+                    SetContentAnchoredPosition(position);
+                }
+            }
+
 
             if (_dragging && inertia)
             {
@@ -652,13 +636,10 @@ namespace Scrmizu
             if (_viewBounds != _prevViewBounds || ContentBounds != _prevContentBounds ||
                 content.anchoredPosition != _prevPosition)
             {
-                UpdateScrollbars(offset);
                 UISystemProfilerApi.AddMarker("ScrollRect.value", this);
                 onValueChanged.Invoke(NormalizedPosition);
                 UpdatePrevData();
             }
-
-            UpdateScrollbarVisibility();
         }
 
         /// <summary>
@@ -693,6 +674,7 @@ namespace Scrmizu
             localPosition[axis] = newLocalPosition;
             content.localPosition = localPosition;
             _velocity[axis] = 0;
+            UpdatePage();
             UpdateBounds();
         }
 
@@ -757,13 +739,40 @@ namespace Scrmizu
             AdjustBounds(ref _viewBounds, ref contentPivot, ref contentSize, ref contentPos);
         }
 
-        private RectTransform RectTransform
+        private void UpdatePage()
         {
-            get
+            float value;
+            float size;
+            switch (direction)
             {
-                if (_rect == null)
-                    _rect = GetComponent<RectTransform>();
-                return _rect;
+                case Direction.Vertical:
+                    value = content.anchoredPosition.y;
+                    size = viewport.rect.height;
+                    break;
+                case Direction.Horizontal:
+                    value = -content.anchoredPosition.x;
+                    size = viewport.rect.width;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            if (value < 0)
+                _page = 0;
+            else if (size * content.childCount < value)
+                _page = content.childCount - 1;
+            else
+                _page = (int) Mathf.Floor(value / size + 0.5f);
+            switch (direction)
+            {
+                case Direction.Vertical:
+                    _pagedPosition = _page * size;
+                    break;
+                case Direction.Horizontal:
+                    _pagedPosition = _page * size * -1;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
 
@@ -771,39 +780,6 @@ namespace Scrmizu
         {
             if (!_hasRebuiltLayout && !CanvasUpdateRegistry.IsRebuildingLayout())
                 Canvas.ForceUpdateCanvases();
-        }
-
-        private void UpdateScrollbars(Vector2 offset)
-        {
-            if (scrollbar == null) return;
-            switch (direction)
-            {
-                case Direction.Vertical:
-                    if (ContentBounds.size.y > 0)
-                        scrollbar.size =
-                            Mathf.Clamp01((_viewBounds.size.y - Mathf.Abs(offset.y)) / ContentBounds.size.y);
-                    else
-                        scrollbar.size = 1;
-
-                    scrollbar.value = VerticalNormalizedPosition;
-                    break;
-                case Direction.Horizontal:
-                    if (ContentBounds.size.x > 0)
-                        scrollbar.size =
-                            Mathf.Clamp01((_viewBounds.size.x - Mathf.Abs(offset.x)) / ContentBounds.size.x);
-                    else
-                        scrollbar.size = 1;
-
-                    scrollbar.value = HorizontalNormalizedPosition;
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-
-        private void SetNormalizedPosition(float value)
-        {
-            SetNormalizedPosition(value, Horizontal ? 0 : 1);
         }
 
         private static float RubberDelta(float overStretching, float viewSize)
@@ -817,6 +793,31 @@ namespace Scrmizu
         /// </summary>
         public virtual void CalculateLayoutInputHorizontal()
         {
+            _contentChildren.Clear();
+            for (var i = 0; i < content.childCount; i++)
+            {
+                var rect = content.GetChild(i) as RectTransform;
+                if (rect == null || !rect.gameObject.activeInHierarchy)
+                    continue;
+
+                ListPool.AddRange(rect.GetComponents<ILayoutIgnorer>());
+
+                if (ListPool.Count == 0)
+                {
+                    _contentChildren.Add(rect);
+                    continue;
+                }
+
+                foreach (var ignorer in ListPool)
+                {
+                    if (ignorer.ignoreLayout) continue;
+                    _contentChildren.Add(rect);
+                    break;
+                }
+            }
+
+            ListPool.Clear();
+            _tracker.Clear();
         }
 
         /// <summary>
@@ -829,6 +830,7 @@ namespace Scrmizu
         public virtual void SetLayoutHorizontal()
         {
             _tracker.Clear();
+            HandleSelfFittingAlongAxis(0);
         }
 
         public virtual void SetLayoutVertical()
@@ -836,18 +838,44 @@ namespace Scrmizu
             var rect = ViewRect.rect;
             _viewBounds = new Bounds(rect.center, rect.size);
             ContentBounds = GetBounds();
+            HandleSelfFittingAlongAxis(1);
         }
 
-        void UpdateScrollbarVisibility()
+        private void HandleSelfFittingAlongAxis(int axis)
         {
             switch (direction)
             {
                 case Direction.Vertical:
-                    UpdateOneScrollbarVisibility(VScrollingNeeded, Vertical, verticalScrollbarVisibility, scrollbar);
+                    if (axis != 1) return;
+                    var height = viewport.rect.height;
+                    _tracker.Add(this, content, DrivenTransformProperties.SizeDeltaY);
+                    content.SetSizeWithCurrentAnchors((RectTransform.Axis) axis, height * content.childCount);
+
+                    for (var i = 0; i < ContentChildren.Count; i++)
+                    {
+                        var child = ContentChildren[i];
+                        _tracker.Add(this, child, DrivenTransformProperties.SizeDeltaY);
+                        _tracker.Add(this, child, DrivenTransformProperties.AnchoredPositionY);
+                        child.anchoredPosition = new Vector2(child.anchoredPosition.x, height / 2 + height * i);
+                        child.SetSizeWithCurrentAnchors((RectTransform.Axis) axis, height);
+                    }
+
                     break;
                 case Direction.Horizontal:
-                    UpdateOneScrollbarVisibility(HScrollingNeeded, Horizontal, horizontalScrollbarVisibility,
-                        scrollbar);
+                    if (axis != 0) return;
+                    var width = viewport.rect.width;
+                    _tracker.Add(this, content, DrivenTransformProperties.SizeDeltaX);
+                    content.SetSizeWithCurrentAnchors((RectTransform.Axis) axis, width * content.childCount);
+
+                    for (var i = 0; i < ContentChildren.Count; i++)
+                    {
+                        var child = ContentChildren[i];
+                        _tracker.Add(this, child, DrivenTransformProperties.SizeDeltaX);
+                        _tracker.Add(this, child, DrivenTransformProperties.AnchoredPositionX);
+                        child.anchoredPosition = new Vector2(width / 2 + width * i, child.anchoredPosition.y);
+                        child.SetSizeWithCurrentAnchors((RectTransform.Axis) axis, width);
+                    }
+
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -905,6 +933,29 @@ namespace Scrmizu
             return InternalGetBounds(_mCorners, ref viewWorldToLocalMatrix);
         }
 
+        private Vector2 CalculateOffset(Vector2 delta)
+        {
+            return InternalCalculateOffset(ref _viewBounds, ref ContentBounds, direction, movementType, ref delta);
+        }
+
+        private Vector2 CalculatePageOffset()
+        {
+            var offset = Vector2.zero;
+            switch (direction)
+            {
+                case Direction.Vertical:
+                    offset.y = _pagedPosition - content.anchoredPosition.y;
+                    break;
+                case Direction.Horizontal:
+                    offset.x = _pagedPosition - content.anchoredPosition.x;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            return offset;
+        }
+
         internal static Bounds InternalGetBounds(Vector3[] corners, ref Matrix4x4 viewWorldToLocalMatrix)
         {
             var vMin = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
@@ -922,14 +973,8 @@ namespace Scrmizu
             return bounds;
         }
 
-        private Vector2 CalculateOffset(Vector2 delta)
-        {
-            return InternalCalculateOffset(ref _viewBounds, ref ContentBounds, Horizontal, Vertical, movementType,
-                ref delta);
-        }
-
         internal static Vector2 InternalCalculateOffset(ref Bounds viewBounds, ref Bounds contentBounds,
-            bool horizontal, bool vertical, MovementType movementType, ref Vector2 delta)
+            Direction direction, MovementType movementType, ref Vector2 delta)
         {
             var offset = Vector2.zero;
             if (movementType == MovementType.Unrestricted)
@@ -938,23 +983,27 @@ namespace Scrmizu
             Vector2 min = contentBounds.min;
             Vector2 max = contentBounds.max;
 
-            if (horizontal)
+            switch (direction)
             {
-                min.x += delta.x;
-                max.x += delta.x;
-                if (min.x > viewBounds.min.x)
-                    offset.x = viewBounds.min.x - min.x;
-                else if (max.x < viewBounds.max.x)
-                    offset.x = viewBounds.max.x - max.x;
+                case Direction.Vertical:
+                    min.y += delta.y;
+                    max.y += delta.y;
+                    if (max.y < viewBounds.max.y)
+                        offset.y = viewBounds.max.y - max.y;
+                    else if (min.y > viewBounds.min.y)
+                        offset.y = viewBounds.min.y - min.y;
+                    break;
+                case Direction.Horizontal:
+                    min.x += delta.x;
+                    max.x += delta.x;
+                    if (min.x > viewBounds.min.x)
+                        offset.x = viewBounds.min.x - min.x;
+                    else if (max.x < viewBounds.max.x)
+                        offset.x = viewBounds.max.x - max.x;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
             }
-
-            if (!vertical) return offset;
-            min.y += delta.y;
-            max.y += delta.y;
-            if (max.y < viewBounds.max.y)
-                offset.y = viewBounds.max.y - max.y;
-            else if (min.y > viewBounds.min.y)
-                offset.y = viewBounds.min.y - min.y;
 
             return offset;
         }
