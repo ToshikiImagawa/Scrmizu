@@ -372,8 +372,6 @@ namespace Scrmizu
         {
             switch (executing)
             {
-                case CanvasUpdate.Prelayout:
-                    break;
                 case CanvasUpdate.PostLayout:
                     UpdateBounds();
                     UpdateScrollbars(Vector2.zero);
@@ -381,6 +379,7 @@ namespace Scrmizu
 
                     _hasRebuiltLayout = true;
                     break;
+                case CanvasUpdate.Prelayout:
                 case CanvasUpdate.Layout:
                 case CanvasUpdate.PreRender:
                 case CanvasUpdate.LatePreRender:
@@ -500,9 +499,8 @@ namespace Scrmizu
             if (!IsActive())
                 return;
 
-            Vector2 localCursor;
             if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(ViewRect, eventData.position,
-                eventData.pressEventCamera, out localCursor))
+                eventData.pressEventCamera, out var localCursor))
                 return;
 
             UpdateBounds();
@@ -835,7 +833,8 @@ namespace Scrmizu
 
         public virtual void SetLayoutVertical()
         {
-            _viewBounds = new Bounds(ViewRect.rect.center, ViewRect.rect.size);
+            var rect = ViewRect.rect;
+            _viewBounds = new Bounds(rect.center, rect.size);
             ContentBounds = GetBounds();
         }
 
