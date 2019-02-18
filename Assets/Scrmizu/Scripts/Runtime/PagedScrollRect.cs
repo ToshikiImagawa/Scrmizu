@@ -15,6 +15,12 @@ namespace Scrmizu
     public class PagedScrollRect : UIBehaviour, IInitializePotentialDragHandler, IBeginDragHandler, IEndDragHandler,
         IDragHandler, IScrollHandler, ICanvasElement, ILayoutElement, ILayoutGroup
     {
+        /// <summary>
+        /// Reverse direction scroll.
+        /// </summary>
+        [SerializeField, Tooltip("Reverse direction scroll.")]
+        private bool isReverse = false;
+
         [SerializeField] private RectTransform content;
 
         [SerializeField, Tooltip("Direction of scroll.")]
@@ -277,7 +283,7 @@ namespace Scrmizu
                 if (_viewRect == null)
                     _viewRect = viewport;
                 if (_viewRect == null)
-                    _viewRect = (RectTransform) transform;
+                    _viewRect = (RectTransform)transform;
                 return _viewRect;
             }
         }
@@ -746,11 +752,11 @@ namespace Scrmizu
             switch (direction)
             {
                 case Direction.Vertical:
-                    value = content.anchoredPosition.y;
+                    value = content.anchoredPosition.y * (isReverse ? -1 : 1);
                     size = viewport.rect.height;
                     break;
                 case Direction.Horizontal:
-                    value = -content.anchoredPosition.x;
+                    value = content.anchoredPosition.x * (isReverse ? 1 : -1);
                     size = viewport.rect.width;
                     break;
                 default:
@@ -762,14 +768,14 @@ namespace Scrmizu
             else if (size * content.childCount < value)
                 _page = content.childCount - 1;
             else
-                _page = (int) Mathf.Floor(value / size + 0.5f);
+                _page = (int)Mathf.Floor(value / size + 0.5f);
             switch (direction)
             {
                 case Direction.Vertical:
-                    _pagedPosition = _page * size;
+                    _pagedPosition = _page * size * (isReverse ? -1 : 1);
                     break;
                 case Direction.Horizontal:
-                    _pagedPosition = _page * size * -1;
+                    _pagedPosition = _page * size * (isReverse ? 1 : -1);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -849,15 +855,15 @@ namespace Scrmizu
                     if (axis != 1) return;
                     var height = viewport.rect.height;
                     _tracker.Add(this, content, DrivenTransformProperties.SizeDeltaY);
-                    content.SetSizeWithCurrentAnchors((RectTransform.Axis) axis, height * content.childCount);
+                    content.SetSizeWithCurrentAnchors((RectTransform.Axis)axis, height * content.childCount);
 
                     for (var i = 0; i < ContentChildren.Count; i++)
                     {
                         var child = ContentChildren[i];
                         _tracker.Add(this, child, DrivenTransformProperties.SizeDeltaY);
                         _tracker.Add(this, child, DrivenTransformProperties.AnchoredPositionY);
-                        child.anchoredPosition = new Vector2(child.anchoredPosition.x, height / 2 + height * i);
-                        child.SetSizeWithCurrentAnchors((RectTransform.Axis) axis, height);
+                        child.anchoredPosition = new Vector2(child.anchoredPosition.x, height / 2 * (isReverse ? 1 : -1) + height * i * (isReverse ? 1 : -1));
+                        child.SetSizeWithCurrentAnchors((RectTransform.Axis)axis, height);
                     }
 
                     break;
@@ -865,15 +871,15 @@ namespace Scrmizu
                     if (axis != 0) return;
                     var width = viewport.rect.width;
                     _tracker.Add(this, content, DrivenTransformProperties.SizeDeltaX);
-                    content.SetSizeWithCurrentAnchors((RectTransform.Axis) axis, width * content.childCount);
+                    content.SetSizeWithCurrentAnchors((RectTransform.Axis)axis, width * content.childCount);
 
                     for (var i = 0; i < ContentChildren.Count; i++)
                     {
                         var child = ContentChildren[i];
                         _tracker.Add(this, child, DrivenTransformProperties.SizeDeltaX);
                         _tracker.Add(this, child, DrivenTransformProperties.AnchoredPositionX);
-                        child.anchoredPosition = new Vector2(width / 2 + width * i, child.anchoredPosition.y);
-                        child.SetSizeWithCurrentAnchors((RectTransform.Axis) axis, width);
+                        child.anchoredPosition = new Vector2(width / 2 * (isReverse ? -1 : 1) + width * i * (isReverse ? -1 : 1), child.anchoredPosition.y);
+                        child.SetSizeWithCurrentAnchors((RectTransform.Axis)axis, width);
                     }
 
                     break;
