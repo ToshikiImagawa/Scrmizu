@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
@@ -6,6 +7,8 @@ namespace Scrmizu
 {
     public class NestedScrollRect : ScrollRect
     {
+        protected internal virtual bool IsNestedScroll { get; } = true;
+
         private bool _routeToParent;
         private IInitializePotentialDragHandler _parentInitializePotentialDragHandler;
         private IDragHandler _parentDragHandler;
@@ -58,18 +61,36 @@ namespace Scrmizu
 
         public sealed override void OnInitializePotentialDrag(PointerEventData eventData)
         {
-            ParentInitializePotentialDragHandler.OnInitializePotentialDrag(eventData);
+            if (!IsNestedScroll)
+            {
+                base.OnInitializePotentialDrag(eventData);
+                return;
+            }
+
+            ParentInitializePotentialDragHandler?.OnInitializePotentialDrag(eventData);
             base.OnInitializePotentialDrag(eventData);
         }
 
         public sealed override void OnDrag(PointerEventData eventData)
         {
+            if (!IsNestedScroll)
+            {
+                base.OnDrag(eventData);
+                return;
+            }
+
             if (_routeToParent) ParentDragHandler?.OnDrag(eventData);
             else base.OnDrag(eventData);
         }
 
         public sealed override void OnBeginDrag(PointerEventData eventData)
         {
+            if (!IsNestedScroll)
+            {
+                base.OnBeginDrag(eventData);
+                return;
+            }
+
             if (!horizontal && Math.Abs(eventData.delta.x) > Math.Abs(eventData.delta.y))
                 _routeToParent = true;
             else if (!vertical && Math.Abs(eventData.delta.x) < Math.Abs(eventData.delta.y))
@@ -83,7 +104,13 @@ namespace Scrmizu
 
         public sealed override void OnEndDrag(PointerEventData eventData)
         {
-            if (_routeToParent) ParentEndDragHandler.OnEndDrag(eventData);
+            if (!IsNestedScroll)
+            {
+                base.OnEndDrag(eventData);
+                return;
+            }
+
+            if (_routeToParent) ParentEndDragHandler?.OnEndDrag(eventData);
             else base.OnEndDrag(eventData);
             _routeToParent = false;
         }

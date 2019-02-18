@@ -45,6 +45,12 @@ namespace Scrmizu
         [SerializeField, Range(1, 100), Tooltip("Count to be instantiated.")]
         private int instantiatedItemCount = 9;
 
+        /// <summary>
+        /// Is nested scroll.
+        /// </summary>
+        [SerializeField, Tooltip("Is nested scroll.")]
+        private bool isNestedScroll = true;
+
         private InfiniteScrollBinderBase[] _infiniteScrollBinders;
 
         private int _currentBinderIndex;
@@ -91,6 +97,8 @@ namespace Scrmizu
                 }
             }
         }
+
+        protected internal override bool IsNestedScroll => isNestedScroll;
 
         private InfiniteScrollBinderBase[] InfiniteScrollBinders
         {
@@ -536,6 +544,7 @@ namespace Scrmizu
         internal class InfiniteScrollBinder : InfiniteScrollBinderBase
         {
             private RectTransform _rectTransform;
+
             private RectTransform RectTransform =>
                 _rectTransform != null ? _rectTransform : _rectTransform = GetComponent<RectTransform>();
 
