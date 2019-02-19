@@ -855,15 +855,29 @@ namespace Scrmizu
                     if (axis != 1) return;
                     var height = viewport.rect.height;
                     _tracker.Add(this, content, DrivenTransformProperties.SizeDeltaY);
+                    _tracker.Add(this, content, DrivenTransformProperties.AnchoredPositionY);
+                    _tracker.Add(this, content, DrivenTransformProperties.AnchorMaxY);
+                    _tracker.Add(this, content, DrivenTransformProperties.AnchorMinY);
+                    _tracker.Add(this, content, DrivenTransformProperties.PivotY);
+
                     content.SetSizeWithCurrentAnchors((RectTransform.Axis)axis, height * content.childCount);
+                    content.anchorMax = new Vector2(content.anchorMax.x, isReverse ? 0 : 1f);
+                    content.anchorMin = new Vector2(content.anchorMin.x, isReverse ? 0 : 1f);
+                    content.pivot = new Vector2(content.pivot.x, isReverse ? 0 : 1f);
 
                     for (var i = 0; i < ContentChildren.Count; i++)
                     {
                         var child = ContentChildren[i];
                         _tracker.Add(this, child, DrivenTransformProperties.SizeDeltaY);
                         _tracker.Add(this, child, DrivenTransformProperties.AnchoredPositionY);
+                        _tracker.Add(this, child, DrivenTransformProperties.AnchorMaxY);
+                        _tracker.Add(this, child, DrivenTransformProperties.AnchorMinY);
+                        _tracker.Add(this, child, DrivenTransformProperties.PivotY);
                         child.anchoredPosition = new Vector2(child.anchoredPosition.x, height / 2 * (isReverse ? 1 : -1) + height * i * (isReverse ? 1 : -1));
                         child.SetSizeWithCurrentAnchors((RectTransform.Axis)axis, height);
+                        child.anchorMax = new Vector2(child.anchorMax.x, isReverse ? 0 : 1f);
+                        child.anchorMin = new Vector2(child.anchorMin.x, isReverse ? 0 : 1f);
+                        child.pivot = new Vector2(child.pivot.x, 0.5f);
                     }
 
                     break;
@@ -871,15 +885,29 @@ namespace Scrmizu
                     if (axis != 0) return;
                     var width = viewport.rect.width;
                     _tracker.Add(this, content, DrivenTransformProperties.SizeDeltaX);
+                    _tracker.Add(this, content, DrivenTransformProperties.AnchoredPositionX);
+                    _tracker.Add(this, content, DrivenTransformProperties.AnchorMaxX);
+                    _tracker.Add(this, content, DrivenTransformProperties.AnchorMinX);
+                    _tracker.Add(this, content, DrivenTransformProperties.PivotX);
+
                     content.SetSizeWithCurrentAnchors((RectTransform.Axis)axis, width * content.childCount);
+                    content.anchorMax = new Vector2(isReverse ? 1f : 0, content.anchorMax.y);
+                    content.anchorMin = new Vector2(isReverse ? 1f : 0, content.anchorMin.y);
+                    content.pivot = new Vector2(isReverse ? 1f : 0, content.pivot.y);
 
                     for (var i = 0; i < ContentChildren.Count; i++)
                     {
                         var child = ContentChildren[i];
                         _tracker.Add(this, child, DrivenTransformProperties.SizeDeltaX);
                         _tracker.Add(this, child, DrivenTransformProperties.AnchoredPositionX);
+                        _tracker.Add(this, child, DrivenTransformProperties.AnchorMaxX);
+                        _tracker.Add(this, child, DrivenTransformProperties.AnchorMinX);
+                        _tracker.Add(this, child, DrivenTransformProperties.PivotX);
                         child.anchoredPosition = new Vector2(width / 2 * (isReverse ? -1 : 1) + width * i * (isReverse ? -1 : 1), child.anchoredPosition.y);
                         child.SetSizeWithCurrentAnchors((RectTransform.Axis)axis, width);
+                        child.anchorMax = new Vector2(isReverse ? 1f : 0, child.anchorMax.y);
+                        child.anchorMin = new Vector2(isReverse ? 1f : 0, child.anchorMin.y);
+                        child.pivot = new Vector2(0.5f, child.pivot.y);
                     }
 
                     break;
