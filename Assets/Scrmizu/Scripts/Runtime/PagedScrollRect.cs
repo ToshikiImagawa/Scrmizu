@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using static UnityEngine.UI.ScrollRect;
@@ -21,6 +22,11 @@ namespace Scrmizu
         [SerializeField, Tooltip("Reverse direction scroll.")]
         private bool isReverse = false;
 
+        /// <summary>
+        /// Page
+        /// </summary>
+        [SerializeField, Tooltip("Page.")] private int page;
+
         [SerializeField] private RectTransform content;
 
         [SerializeField, Tooltip("Direction of scroll.")]
@@ -36,6 +42,7 @@ namespace Scrmizu
         [SerializeField] private RectTransform viewport;
 
         [SerializeField] private ScrollRectEvent onValueChanged = new ScrollRectEvent();
+        [SerializeField] private PagedScrollRectEvent onPageChanged = new PagedScrollRectEvent();
 
         [NonSerialized] private bool _hasRebuiltLayout;
         [NonSerialized] private RectTransform _rect;
@@ -51,9 +58,6 @@ namespace Scrmizu
         private Bounds _viewBounds;
 
         private Vector2 _velocity;
-
-        private int _page;
-        private float _pagedPosition;
 
         private bool _dragging;
 
@@ -165,6 +169,15 @@ namespace Scrmizu
         }
 
         /// <summary>
+        /// Callback executed when the page changes.
+        /// </summary>
+        public PagedScrollRectEvent OnPageChanged
+        {
+            get => onPageChanged;
+            set => onPageChanged = value;
+        }
+
+        /// <summary>
         /// The current velocity of the content.
         /// </summary>
         /// <remarks>
@@ -181,10 +194,10 @@ namespace Scrmizu
         /// </summary>
         public int Page
         {
-            get => _page;
+            get => page;
             set
             {
-                _page = value;
+                page = value;
                 UpdatePage();
             }
         }
@@ -319,6 +332,22 @@ namespace Scrmizu
                 if (_rect == null)
                     _rect = GetComponent<RectTransform>();
                 return _rect;
+            }
+        }
+
+        private float PagedPosition
+        {
+            get
+            {
+                switch (direction)
+                {
+                    case Direction.Vertical:
+                        return page * viewport.rect.height * (isReverse ? -1 : 1);
+                    case Direction.Horizontal:
+                        return page * viewport.rect.width * (isReverse ? 1 : -1);
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
             }
         }
 
@@ -541,7 +570,7 @@ namespace Scrmizu
 
             if (position == content.anchoredPosition) return;
             content.anchoredPosition = position;
-            if (!_dragging) UpdatePage();
+            if (_dragging) UpdatePage();
             UpdateBounds();
         }
 
@@ -763,23 +792,16 @@ namespace Scrmizu
                     throw new ArgumentOutOfRangeException();
             }
 
+            var beforePage = page;
             if (value < 0)
-                _page = 0;
+                page = 0;
             else if (size * content.childCount < value)
-                _page = content.childCount - 1;
+                page = content.childCount - 1;
             else
-                _page = (int)Mathf.Floor(value / size + 0.5f);
-            switch (direction)
-            {
-                case Direction.Vertical:
-                    _pagedPosition = _page * size * (isReverse ? -1 : 1);
-                    break;
-                case Direction.Horizontal:
-                    _pagedPosition = _page * size * (isReverse ? 1 : -1);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+                page = (int)Mathf.Floor(value / size + 0.5f);
+
+            if (beforePage == page) return;
+            onPageChanged.Invoke(page);
         }
 
         private void EnsureLayoutHasRebuilt()
@@ -978,10 +1000,10 @@ namespace Scrmizu
             switch (direction)
             {
                 case Direction.Vertical:
-                    offset.y = _pagedPosition - content.anchoredPosition.y;
+                    offset.y = PagedPosition - content.anchoredPosition.y;
                     break;
                 case Direction.Horizontal:
-                    offset.x = _pagedPosition - content.anchoredPosition.x;
+                    offset.x = PagedPosition - content.anchoredPosition.x;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -1040,6 +1062,10 @@ namespace Scrmizu
             }
 
             return offset;
+        }
+
+        public class PagedScrollRectEvent : UnityEvent<int>
+        {
         }
     }
 }
