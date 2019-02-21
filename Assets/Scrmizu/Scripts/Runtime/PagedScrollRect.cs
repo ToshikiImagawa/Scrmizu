@@ -197,6 +197,7 @@ namespace Scrmizu
             get => page;
             set
             {
+                if (page == value) return;
                 page = value;
                 onPageChanged.Invoke(value);
             }
@@ -357,13 +358,13 @@ namespace Scrmizu
 
         public virtual void Next()
         {
-            if (page + 1 >= _contentChildren.Count) return;
+            if ((page + 1) >= _contentChildren.Count) return;
             Page = page + 1; 
         }
  
         public virtual void Back()
         {
-            if (page - 1 < 0) return;
+            if ((page - 1) < 0) return;
             Page = page - 1;
         }
 
@@ -1076,8 +1077,10 @@ namespace Scrmizu
             return offset;
         }
 
-        public class PagedScrollRectEvent : UnityEvent<int>
-        {
-        }
+        [Serializable]
+        /// <summary>
+        /// Event type used by the PagedScrollRect.
+        /// </summary>
+        public class PagedScrollRectEvent : UnityEvent<int> {}
     }
 }
