@@ -198,7 +198,7 @@ namespace Scrmizu
             set
             {
                 page = value;
-                UpdatePage();
+                onPageChanged.Invoke(value);
             }
         }
 
@@ -353,6 +353,18 @@ namespace Scrmizu
 
         protected PagedScrollRect()
         {
+        }
+
+        public virtual void Next()
+        {
+            if (page + 1 >= _contentChildren.Count) return;
+            Page = page + 1; 
+        }
+ 
+        public virtual void Back()
+        {
+            if (page - 1 < 0) return;
+            Page = page - 1;
         }
 
         public virtual void Rebuild(CanvasUpdate executing)
