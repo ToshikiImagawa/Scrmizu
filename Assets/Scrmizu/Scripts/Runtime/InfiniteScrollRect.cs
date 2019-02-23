@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace Scrmizu
 {
@@ -59,6 +58,8 @@ namespace Scrmizu
         private List<object> _itemDataList = new List<object>();
         private List<float> _itemSizeList = new List<float>();
 
+        protected IInfiniteScrollElementFactory _infiniteScrollElementFactory;
+
         /// <summary>
         /// Gets the index of the current item.
         /// </summary>
@@ -100,6 +101,10 @@ namespace Scrmizu
 
         protected internal override bool IsNestedScroll => isNestedScroll;
 
+        protected virtual IInfiniteScrollElementFactory InfiniteScrollElementFactory =>
+            _infiniteScrollElementFactory != null ? _infiniteScrollElementFactory :
+            (_infiniteScrollElementFactory = new StandardInfiniteScrollElementFactory(itemBase, content));
+
         private InfiniteScrollBinderBase[] InfiniteScrollBinders
         {
             get
@@ -110,10 +115,7 @@ namespace Scrmizu
                 _infiniteScrollBinders = new InfiniteScrollBinderBase[instantiatedItemCount];
                 for (var i = 0; i < instantiatedItemCount; i++)
                 {
-                    var item = Instantiate(itemBase, content, false);
-                    item.name = $"{nameof(itemBase)}_{i}";
-                    _infiniteScrollBinders[i] = item.gameObject.GetComponent<InfiniteScrollBinderBase>() ??
-                                                item.gameObject.AddComponent<InfiniteScrollBinder>();
+                    _infiniteScrollBinders[i] = InfiniteScrollElementFactory.Create();
                     _infiniteScrollBinders[i].SetInfiniteScroll(this);
                     _infiniteScrollBinders[i].Hide();
                 }
@@ -541,7 +543,7 @@ namespace Scrmizu
             gameObject.SetActive(true);
         }
 
-        internal class InfiniteScrollBinder : InfiniteScrollBinderBase
+        private class InfiniteScrollBinder : InfiniteScrollBinderBase
         {
             private RectTransform _rectTransform;
 
@@ -562,5 +564,31 @@ namespace Scrmizu
                 RectTransform.anchoredPosition = position;
             }
         }
+
+        private class StandardInfiniteScrollElementFactory : IInfiniteScrollElementFactory
+        {
+            private readonly MonoBehaviour _itemBase;
+            private readonly Transform _content;
+            private int i;
+
+            public StandardInfiniteScrollElementFactory(MonoBehaviour itemBase, Transform content)
+            {
+                _itemBase = itemBase;
+                _content = content;
+            }
+
+            InfiniteScrollBinderBase IInfiniteScrollElementFactory.Create()
+            {
+                var item = Instantiate(_itemBase, _content, false);
+                item.name = $"{_itemBase.gameObject.name}_{i++}";
+                return item.gameObject.GetComponent<InfiniteScrollBinderBase>() ??
+                                            item.gameObject.AddComponent<InfiniteScrollBinder>();
+            }
+        }
+    }
+
+    public interface IInfiniteScrollElementFactory
+    {
+        InfiniteScrollBinderBase Create();
     }
 }
