@@ -101,6 +101,10 @@ namespace Scrmizu
 
         protected internal override bool IsNestedScroll => isNestedScroll;
 
+        /// <summary>
+        /// Factory to create InfiniteScrollRect elements.
+        /// </summary>
+        /// <value>Factory.</value>
         protected virtual IInfiniteScrollElementFactory InfiniteScrollElementFactory =>
             _infiniteScrollElementFactory != null ? _infiniteScrollElementFactory :
             (_infiniteScrollElementFactory = new StandardInfiniteScrollElementFactory(itemBase, content));
