@@ -87,6 +87,7 @@ namespace Scrmizu
         {
             get
             {
+                if (content == null) throw new Exception("Content is not set.");
                 switch (direction)
                 {
                     case Direction.Vertical:
@@ -105,17 +106,22 @@ namespace Scrmizu
         /// Factory to create InfiniteScrollRect elements.
         /// </summary>
         /// <value>Factory.</value>
-        protected virtual IInfiniteScrollElementFactory InfiniteScrollElementFactory =>
-            _infiniteScrollElementFactory != null ? _infiniteScrollElementFactory :
-            (_infiniteScrollElementFactory = new StandardInfiniteScrollElementFactory(itemBase, content));
+        protected virtual IInfiniteScrollElementFactory InfiniteScrollElementFactory
+        {
+            get
+            {
+                if (content == null) throw new Exception("Content is not set.");
+                if (itemBase == null) throw new Exception("ItemBase is not set.");
+                return _infiniteScrollElementFactory != null ? _infiniteScrollElementFactory :
+                (_infiniteScrollElementFactory = new StandardInfiniteScrollElementFactory(itemBase, content));
+            }
+        }
 
         private InfiniteScrollBinderBase[] InfiniteScrollBinders
         {
             get
             {
                 if (_infiniteScrollBinders != null) return _infiniteScrollBinders;
-                if (content == null) throw new Exception("Content is not set.");
-                if (itemBase == null) throw new Exception("ItemBase is not set.");
                 _infiniteScrollBinders = new InfiniteScrollBinderBase[instantiatedItemCount];
                 for (var i = 0; i < instantiatedItemCount; i++)
                 {
@@ -279,6 +285,7 @@ namespace Scrmizu
         /// <param name="position">Position.</param>
         public void MovePosition(float position)
         {
+            if (content == null) throw new Exception("Content is not set.");
             switch (direction)
             {
                 case Direction.Vertical:
@@ -409,6 +416,7 @@ namespace Scrmizu
 
         private void OnScrollMove(Vector2 call)
         {
+            if (content == null) throw new Exception("Content is not set.");
             var pos = content.anchoredPosition;
             switch (direction)
             {
@@ -431,6 +439,7 @@ namespace Scrmizu
 
         private void UpdateContents()
         {
+            if (content == null) throw new Exception("Content is not set.");
             var fullSize = _itemSizeList.Sum() + itemInterval * (_itemSizeList.Count - 1);
             switch (direction)
             {
@@ -546,48 +555,26 @@ namespace Scrmizu
             gameObject.SetActive(false);
             gameObject.SetActive(true);
         }
+    }
 
-        private class InfiniteScrollBinder : InfiniteScrollBinderBase
+    public sealed class StandardInfiniteScrollElementFactory : IInfiniteScrollElementFactory
+    {
+        private readonly MonoBehaviour _itemBase;
+        private readonly Transform _content;
+        private int i;
+
+        public StandardInfiniteScrollElementFactory(MonoBehaviour itemBase, Transform content)
         {
-            private RectTransform _rectTransform;
-
-            private RectTransform RectTransform =>
-                _rectTransform != null ? _rectTransform : _rectTransform = GetComponent<RectTransform>();
-
-            public override Vector2 Size
-            {
-                get
-                {
-                    var rect = RectTransform.rect;
-                    return new Vector2(rect.width, rect.height);
-                }
-            }
-
-            public override void UpdateItemPosition(Vector2 position)
-            {
-                RectTransform.anchoredPosition = position;
-            }
+            _itemBase = itemBase;
+            _content = content;
         }
 
-        private class StandardInfiniteScrollElementFactory : IInfiniteScrollElementFactory
+        InfiniteScrollBinderBase IInfiniteScrollElementFactory.Create()
         {
-            private readonly MonoBehaviour _itemBase;
-            private readonly Transform _content;
-            private int i;
-
-            public StandardInfiniteScrollElementFactory(MonoBehaviour itemBase, Transform content)
-            {
-                _itemBase = itemBase;
-                _content = content;
-            }
-
-            InfiniteScrollBinderBase IInfiniteScrollElementFactory.Create()
-            {
-                var item = Instantiate(_itemBase, _content, false);
-                item.name = $"{_itemBase.gameObject.name}_{i++}";
-                return item.gameObject.GetComponent<InfiniteScrollBinderBase>() ??
-                                            item.gameObject.AddComponent<InfiniteScrollBinder>();
-            }
+            var item = UnityEngine.Object.Instantiate(_itemBase, _content, false);
+            item.name = $"{_itemBase.gameObject.name}_{i++}";
+            return item.gameObject.GetComponent<InfiniteScrollBinderBase>() ??
+                                        item.gameObject.AddComponent<InfiniteScrollBinder>();
         }
     }
 
