@@ -39,6 +39,7 @@ namespace Scrmizu
         [SerializeField] private bool inertia = true;
         [SerializeField] private float decelerationRate = 0.135f; // Only used when inertia is enabled
         [SerializeField] private float scrollSensitivity = 1.0f;
+        [SerializeField] private float snapSpeed = 0.1f;
         [SerializeField] private RectTransform viewport;
 
         [SerializeField] private ScrollRectEvent onValueChanged = new ScrollRectEvent();
@@ -297,7 +298,7 @@ namespace Scrmizu
                 if (_viewRect == null)
                     _viewRect = viewport;
                 if (_viewRect == null)
-                    _viewRect = (RectTransform)transform;
+                    _viewRect = (RectTransform) transform;
                 return _viewRect;
             }
         }
@@ -359,9 +360,9 @@ namespace Scrmizu
         public virtual void Next()
         {
             if ((page + 1) >= _contentChildren.Count) return;
-            Page = page + 1; 
+            Page = page + 1;
         }
- 
+
         public virtual void Back()
         {
             if ((page - 1) < 0) return;
@@ -628,6 +629,7 @@ namespace Scrmizu
                         _velocity[axis] = 0;
                     }
                 }
+
                 SetContentAnchoredPosition(position);
             }
             else
@@ -670,10 +672,10 @@ namespace Scrmizu
                         offset = CalculateOffset(position - content.anchoredPosition);
                         position += offset;
                     }
+
                     SetContentAnchoredPosition(position);
                 }
             }
-
 
             if (_dragging && inertia)
             {
@@ -791,19 +793,26 @@ namespace Scrmizu
         {
             float value;
             float size;
+            float speed;
             switch (direction)
             {
                 case Direction.Vertical:
                     value = content.anchoredPosition.y * (isReverse ? -1 : 1);
                     size = viewport.rect.height;
+                    speed = _velocity.y;
                     break;
                 case Direction.Horizontal:
                     value = content.anchoredPosition.x * (isReverse ? 1 : -1);
                     size = viewport.rect.width;
+                    speed = _velocity.x * -1;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+
+            var time = 1 / Mathf.Log10(decelerationRate);
+            value += speed * time * (isReverse ? -1 : 1) * Mathf.Pow(decelerationRate, time) /
+                     Mathf.Log10(decelerationRate);
 
             var beforePage = page;
             if (value < 0)
@@ -811,7 +820,7 @@ namespace Scrmizu
             else if (size * content.childCount < value)
                 page = content.childCount - 1;
             else
-                page = (int)Mathf.Floor(value / size + 0.5f);
+                page = (int) Mathf.Floor(value / size + 0.5f);
 
             if (beforePage == page) return;
             onPageChanged.Invoke(page);
@@ -895,7 +904,7 @@ namespace Scrmizu
                     _tracker.Add(this, content, DrivenTransformProperties.AnchorMinY);
                     _tracker.Add(this, content, DrivenTransformProperties.PivotY);
 
-                    content.SetSizeWithCurrentAnchors((RectTransform.Axis)axis, height * content.childCount);
+                    content.SetSizeWithCurrentAnchors((RectTransform.Axis) axis, height * content.childCount);
                     content.anchorMax = new Vector2(content.anchorMax.x, isReverse ? 0 : 1f);
                     content.anchorMin = new Vector2(content.anchorMin.x, isReverse ? 0 : 1f);
                     content.pivot = new Vector2(content.pivot.x, isReverse ? 0 : 1f);
@@ -908,8 +917,9 @@ namespace Scrmizu
                         _tracker.Add(this, child, DrivenTransformProperties.AnchorMaxY);
                         _tracker.Add(this, child, DrivenTransformProperties.AnchorMinY);
                         _tracker.Add(this, child, DrivenTransformProperties.PivotY);
-                        child.anchoredPosition = new Vector2(child.anchoredPosition.x, height / 2 * (isReverse ? 1 : -1) + height * i * (isReverse ? 1 : -1));
-                        child.SetSizeWithCurrentAnchors((RectTransform.Axis)axis, height);
+                        child.anchoredPosition = new Vector2(child.anchoredPosition.x,
+                            height / 2 * (isReverse ? 1 : -1) + height * i * (isReverse ? 1 : -1));
+                        child.SetSizeWithCurrentAnchors((RectTransform.Axis) axis, height);
                         child.anchorMax = new Vector2(child.anchorMax.x, isReverse ? 0 : 1f);
                         child.anchorMin = new Vector2(child.anchorMin.x, isReverse ? 0 : 1f);
                         child.pivot = new Vector2(child.pivot.x, 0.5f);
@@ -925,7 +935,7 @@ namespace Scrmizu
                     _tracker.Add(this, content, DrivenTransformProperties.AnchorMinX);
                     _tracker.Add(this, content, DrivenTransformProperties.PivotX);
 
-                    content.SetSizeWithCurrentAnchors((RectTransform.Axis)axis, width * content.childCount);
+                    content.SetSizeWithCurrentAnchors((RectTransform.Axis) axis, width * content.childCount);
                     content.anchorMax = new Vector2(isReverse ? 1f : 0, content.anchorMax.y);
                     content.anchorMin = new Vector2(isReverse ? 1f : 0, content.anchorMin.y);
                     content.pivot = new Vector2(isReverse ? 1f : 0, content.pivot.y);
@@ -938,8 +948,10 @@ namespace Scrmizu
                         _tracker.Add(this, child, DrivenTransformProperties.AnchorMaxX);
                         _tracker.Add(this, child, DrivenTransformProperties.AnchorMinX);
                         _tracker.Add(this, child, DrivenTransformProperties.PivotX);
-                        child.anchoredPosition = new Vector2(width / 2 * (isReverse ? -1 : 1) + width * i * (isReverse ? -1 : 1), child.anchoredPosition.y);
-                        child.SetSizeWithCurrentAnchors((RectTransform.Axis)axis, width);
+                        child.anchoredPosition =
+                            new Vector2(width / 2 * (isReverse ? -1 : 1) + width * i * (isReverse ? -1 : 1),
+                                child.anchoredPosition.y);
+                        child.SetSizeWithCurrentAnchors((RectTransform.Axis) axis, width);
                         child.anchorMax = new Vector2(isReverse ? 1f : 0, child.anchorMax.y);
                         child.anchorMin = new Vector2(isReverse ? 1f : 0, child.anchorMin.y);
                         child.pivot = new Vector2(0.5f, child.pivot.y);
@@ -1081,6 +1093,8 @@ namespace Scrmizu
         /// <summary>
         /// Event type used by the PagedScrollRect.
         /// </summary>
-        public class PagedScrollRectEvent : UnityEvent<int> {}
+        public class PagedScrollRectEvent : UnityEvent<int>
+        {
+        }
     }
 }
