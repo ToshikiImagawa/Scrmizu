@@ -42,7 +42,6 @@ namespace Scrmizu
         [SerializeField] private bool inertia = true;
         [SerializeField] private float decelerationRate = 0.135f; // Only used when inertia is enabled
         [SerializeField] private float scrollSensitivity = 1.0f;
-        [SerializeField] private float snapSpeed = 0.1f;
         [SerializeField] private RectTransform viewport;
 
         [SerializeField] private ScrollRectEvent onValueChanged = new ScrollRectEvent();
