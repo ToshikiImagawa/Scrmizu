@@ -1,3 +1,6 @@
+// Scrmizu C# reference source
+// Copyright (c) 2016-2020 COMCREATE. All rights reserved.
+
 using System;
 using UnityEditor;
 using UnityEditor.AnimatedValues;

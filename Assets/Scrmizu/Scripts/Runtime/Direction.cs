@@ -1,4 +1,7 @@
-﻿namespace Scrmizu
+﻿// Scrmizu C# reference source
+// Copyright (c) 2016-2020 COMCREATE. All rights reserved.
+
+namespace Scrmizu
 {
     /// <summary>
     /// Direction type

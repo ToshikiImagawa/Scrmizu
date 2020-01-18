@@ -1,5 +1,5 @@
-using System;
-using UnityEngine;
+// Scrmizu C# reference source
+// Copyright (c) 2016-2020 COMCREATE. All rights reserved.
 
 namespace Scrmizu
 {

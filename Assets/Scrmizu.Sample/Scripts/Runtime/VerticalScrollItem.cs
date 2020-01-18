@@ -1,8 +1,10 @@
-﻿using System.Linq;
+﻿// Scrmizu C# reference source
+// Copyright (c) 2016-2020 COMCREATE. All rights reserved.
+
+using System.Linq;
 using UnityEngine;
 using Scrmizu;
 using UnityEngine.UI;
-using System.Collections;
 
 namespace Scrmizu_Sample
 {

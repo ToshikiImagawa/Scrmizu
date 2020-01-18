@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Scrmizu C# reference source
+// Copyright (c) 2016-2020 COMCREATE. All rights reserved.
+
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
