@@ -3,10 +3,9 @@
 
 using System.Linq;
 using UnityEngine;
-using Scrmizu;
 using UnityEngine.UI;
 
-namespace Scrmizu_Sample
+namespace Scrmizu.Sample
 {
     [RequireComponent(typeof(RectTransform))]
     public class VerticalScrollItem : MonoBehaviour, IInfiniteScrollItem

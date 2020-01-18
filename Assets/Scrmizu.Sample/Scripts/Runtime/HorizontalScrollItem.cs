@@ -2,11 +2,10 @@
 // Copyright (c) 2016-2020 COMCREATE. All rights reserved.
 
 using System.Linq;
-using Scrmizu;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Scrmizu_Sample
+namespace Scrmizu.Sample
 {
     [RequireComponent(typeof(RectTransform))]
     public class HorizontalScrollItem : MonoBehaviour, IInfiniteScrollItem

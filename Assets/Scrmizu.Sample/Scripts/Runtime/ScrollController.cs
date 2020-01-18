@@ -3,10 +3,9 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using Scrmizu;
 using UnityEngine;
 
-namespace Scrmizu_Sample
+namespace Scrmizu.Sample
 {
     [RequireComponent(typeof(InfiniteScrollRect))]
     public class ScrollController : MonoBehaviour
