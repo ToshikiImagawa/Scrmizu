@@ -2,11 +2,17 @@
 // Copyright (c) 2016-2020 COMCREATE. All rights reserved.
 
 using System;
+using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Scrmizu
 {
+    [AddComponentMenu("UI/Nested Scroll Rect", 37)]
+    [SelectionBase]
+    [ExecuteAlways]
+    [DisallowMultipleComponent]
+    [RequireComponent(typeof(RectTransform))]
     public class NestedScrollRect : ScrollRect
     {
         protected internal virtual bool IsNestedScroll { get; } = true;

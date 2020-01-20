@@ -812,9 +812,8 @@ namespace Scrmizu
                     throw new ArgumentOutOfRangeException();
             }
 
-            var time = 1 / Mathf.Log10(decelerationRate);
-            value += speed * time * (isReverse ? -1 : 1) * Mathf.Pow(decelerationRate, time) /
-                     Mathf.Log10(decelerationRate);
+            var unscaledDeltaTime = Time.unscaledDeltaTime;
+            value += speed * unscaledDeltaTime * (isReverse ? -1 : 1);
 
             var beforePage = page;
             if (value < 0)

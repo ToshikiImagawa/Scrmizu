@@ -8,7 +8,11 @@ using UnityEngine;
 
 namespace Scrmizu
 {
-    [AddComponentMenu("UI/Infinite Scroll Rect")]
+    [AddComponentMenu("UI/Infinite Scroll Rect", 37)]
+    [SelectionBase]
+    [ExecuteAlways]
+    [DisallowMultipleComponent]
+    [RequireComponent(typeof(RectTransform))]
     public class InfiniteScrollRect : NestedScrollRect
     {
         /// <summary>
@@ -577,7 +581,7 @@ namespace Scrmizu
             var item = UnityEngine.Object.Instantiate(_itemBase, _content, false);
             item.name = $"{_itemBase.gameObject.name}_{i++}";
             return item.gameObject.GetComponent<InfiniteScrollBinderBase>() ??
-                                        item.gameObject.AddComponent<InfiniteScrollBinder>();
+                   item.gameObject.AddComponent<InfiniteScrollBinder>();
         }
     }
 
