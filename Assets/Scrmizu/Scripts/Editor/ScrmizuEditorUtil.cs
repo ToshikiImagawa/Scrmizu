@@ -4,7 +4,6 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEditor.Experimental;
 using UnityEngine;
@@ -14,27 +13,9 @@ using Object = UnityEngine.Object;
 
 namespace Scrmizu.Editor
 {
-    internal class ScrmizuEditorUtil
+    internal static class ScrmizuEditorUtil
     {
-        [MenuItem("GameObject/UI/Infinite Scroll View", priority = 2063)]
-        public static void CreateInfiniteScrollView()
-        {
-            CreateInfiniteScrollView(Selection.gameObjects);
-        }
-
-        [MenuItem("GameObject/UI/Nested Scroll View", priority = 2063)]
-        public static void CreateNestedScrollView()
-        {
-            CreateNestedScrollView(Selection.gameObjects);
-        }
-
-        [MenuItem("GameObject/UI/Paged Scroll View", priority = 2063)]
-        public static void CreatePagedScrollView()
-        {
-            CreatePagedScrollView(Selection.gameObjects);
-        }
-
-        private static InfiniteScrollRect CreateInfiniteScrollView(GameObject[] gameObjects)
+        public static InfiniteScrollRect CreateInfiniteScrollView(GameObject[] gameObjects)
         {
             var createPoint = GetCreatePointOfUgui(gameObjects);
             var infiniteScrollRectObj = Object.Instantiate(
@@ -45,7 +26,7 @@ namespace Scrmizu.Editor
             return infiniteScrollRectObj.GetComponent<InfiniteScrollRect>();
         }
 
-        private static NestedScrollRect CreateNestedScrollView(GameObject[] gameObjects)
+        public static NestedScrollRect CreateNestedScrollView(GameObject[] gameObjects)
         {
             var createPoint = GetCreatePointOfUgui(gameObjects);
             var nestedScrollRect = Object.Instantiate(
@@ -56,7 +37,7 @@ namespace Scrmizu.Editor
             return nestedScrollRect.GetComponent<NestedScrollRect>();
         }
 
-        private static PagedScrollRect CreatePagedScrollView(GameObject[] gameObjects)
+        public static PagedScrollRect CreatePagedScrollView(GameObject[] gameObjects)
         {
             var createPoint = GetCreatePointOfUgui(gameObjects);
             var nestedScrollRect = Object.Instantiate(

@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
@@ -713,11 +714,8 @@ namespace Scrmizu
         {
             EnsureLayoutHasRebuilt();
             UpdateBounds();
-            // How much the content is larger than the view.
             var hiddenLength = ContentBounds.size[axis] - _viewBounds.size[axis];
-            // Where the position of the lower left corner of the content bounds should be, in the space of the view.
             var contentBoundsMinPosition = _viewBounds.min[axis] - value * hiddenLength;
-            // The new content localPosition, in the space of the view.
             var position = content.localPosition;
             var newLocalPosition = position[axis] + contentBoundsMinPosition - ContentBounds.min[axis];
 
@@ -744,8 +742,7 @@ namespace Scrmizu
             _viewBounds = new Bounds(rect.center, rect.size);
             ContentBounds = GetBounds();
 
-            if (content == null)
-                return;
+            if (content == null) return;
 
             var contentSize = ContentBounds.size;
             var contentPos = ContentBounds.center;
@@ -755,10 +752,6 @@ namespace Scrmizu
             ContentBounds.center = contentPos;
 
             if (MovementType != MovementType.Clamped) return;
-            // Adjust content so that content bounds bottom (right side) is never higher (to the left) than the view bounds bottom (right side).
-            // top (left side) is never lower (to the right) than the view bounds top (left side).
-            // All this can happen if content has shrunk.
-            // This works because content size is at least as big as view size (because of the call to InternalUpdateBounds above).
             var delta = Vector2.zero;
             if (_viewBounds.max.x > ContentBounds.max.x)
             {
@@ -859,11 +852,9 @@ namespace Scrmizu
                     continue;
                 }
 
-                foreach (var ignorer in ListPool)
+                if (ListPool.Any(ignorer => !ignorer.ignoreLayout))
                 {
-                    if (ignorer.ignoreLayout) continue;
                     _contentChildren.Add(rect);
-                    break;
                 }
             }
 
@@ -983,13 +974,6 @@ namespace Scrmizu
         internal static void AdjustBounds(ref Bounds viewBounds, ref Vector2 contentPivot, ref Vector3 contentSize,
             ref Vector3 contentPos)
         {
-            // Make sure content bounds are at least as large as view by adding padding if not.
-            // One might think at first that if the content is smaller than the view, scrolling should be allowed.
-            // However, that's not how scroll views normally work.
-            // Scrolling is *only* possible when content is *larger* than view.
-            // We use the pivot of the content rect to decide in which directions the content bounds should be expanded.
-            // E.g. if pivot is at top, bounds are expanded downwards.
-            // This also works nicely when ContentSizeFitter is used on the content.
             var excess = viewBounds.size - contentSize;
             if (excess.x > 0)
             {
@@ -1090,10 +1074,10 @@ namespace Scrmizu
             return offset;
         }
 
-        [Serializable]
         /// <summary>
         /// Event type used by the PagedScrollRect.
         /// </summary>
+        [Serializable]
         public class PagedScrollRectEvent : UnityEvent<int>
         {
         }

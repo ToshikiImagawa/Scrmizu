@@ -15,8 +15,10 @@
 ExportedObj/
 .consulo/
 *.csproj
+*.csproj.meta
 *.unityproj
 *.sln
+*.sln.meta
 *.suo
 *.tmp
 *.user
