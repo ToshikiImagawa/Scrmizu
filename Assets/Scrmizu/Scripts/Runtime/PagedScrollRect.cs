@@ -811,11 +811,9 @@ namespace Scrmizu
             var beforePage = page;
             if (value < 0)
                 page = 0;
-            else if (size * content.childCount < value)
-                page = content.childCount - 1;
             else
                 page = (int) Mathf.Floor(value / size + 0.5f);
-
+            if (page >= content.childCount) page = content.childCount - 1;
             if (beforePage == page) return;
             onPageChanged.Invoke(page);
         }
