@@ -17,11 +17,16 @@ Scrmizu is variable infinite scroll and extended UnityEngine.UI.ScrollRect for U
 ## Infinite Scroll View
 To create a Infinite Scroll View in the Unity Editor, go to GameObject → UI → Infinite Scroll View.
 
+![InfiniteScrollRect-HierarchyWindow](https://user-images.githubusercontent.com/6396938/72912227-aa445500-3d7e-11ea-8c7b-59da594e0a0c.png | width=100)
+
+Next, Prepare ScrollItem prefab to be repeatedly displayed by infinite scroll.
+
+
 ## Nested Scroll View
 To create a Nested Scroll View in the Unity Editor, go to GameObject → UI → Nested Scroll View.
 Put it under the Scroll View container.
 
-![NestedScrollRect-HierarchyWindow](https://user-images.githubusercontent.com/6396938/72831133-8bce5300-3cc5-11ea-8cae-5cf5447fcbfa.png)
+![NestedScrollRect-HierarchyWindow](https://user-images.githubusercontent.com/6396938/72831133-8bce5300-3cc5-11ea-8cae-5cf5447fcbfa.png | width=100)
 
 When scrolling in the non-scroll direction of NestedScrollView, scroll event is sent to the parent ScrollView.
 
@@ -29,7 +34,7 @@ When scrolling in the non-scroll direction of NestedScrollView, scroll event is 
 To create a Paged Scroll View in the Unity Editor, go to GameObject → UI → Paged Scroll View.
 Create multiple page content items under content.
 
-![PagedScrollRect-HierarchyWindow](https://user-images.githubusercontent.com/6396938/72828751-ab16b180-3cc0-11ea-9783-3efffd775ae9.png)
+![PagedScrollRect-HierarchyWindow](https://user-images.githubusercontent.com/6396938/72828751-ab16b180-3cc0-11ea-9783-3efffd775ae9.png | width=100)
 
 One item is displayed in the scroll direction in the view area.
 Pauses the page each time scroll.
