@@ -261,7 +261,29 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 51814403}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 349519997}
+        m_MethodName: set_Page
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 1
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 1683426689}
+        m_MethodName: ChatInit
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &51814403
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -482,7 +504,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 278378865}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 349519997}
+        m_MethodName: set_Page
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &278378865
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -676,7 +709,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isReverse: 0
-  page: 1
+  page: 0
   content: {fileID: 2042311266}
   direction: 1
   movementType: 1
@@ -1593,7 +1626,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0.000047523277}
+  m_AnchoredPosition: {x: 0, y: 0.000044431323}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!1 &867011866
@@ -2187,7 +2220,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0.000047523277}
+  m_AnchoredPosition: {x: 0, y: 0.000033811888}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!1 &1112052115
@@ -2324,7 +2357,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: -0.000081697144, y: 0}
+  m_AnchoredPosition: {x: -0.00021308305, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!1 &1121331357
@@ -2404,7 +2437,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1121331360}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 349519997}
+        m_MethodName: set_Page
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 2
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1121331360
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2519,7 +2563,7 @@ GameObject:
   - component: {fileID: 1187635655}
   - component: {fileID: 1187635654}
   m_Layer: 5
-  m_Name: Button
+  m_Name: SettingButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2583,7 +2627,18 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1187635655}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 349519997}
+        m_MethodName: set_Page
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 3
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1187635655
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3005,7 +3060,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 1434787986}
   m_Direction: 0
   m_Value: 1
-  m_Size: 0.9999997
+  m_Size: 0.9999999
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -3327,7 +3382,6 @@ GameObject:
   - component: {fileID: 1683426688}
   - component: {fileID: 1683426687}
   - component: {fileID: 1683426689}
-  - component: {fileID: 1683426690}
   m_Layer: 5
   m_Name: Scroll View
   m_TagString: Untagged
@@ -3400,7 +3454,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1683426685}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 83068abe26b674f59bd89410377dd3ee, type: 3}
+  m_Script: {fileID: 11500000, guid: 20813be51e514ee6bea2b602e6156d57, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_Content: {fileID: 1103315444}
@@ -3425,22 +3479,10 @@ MonoBehaviour:
   isReverse: 0
   itemBase: {fileID: 7861616135024266351, guid: 4ef0933399759405e9d8e4321923328b,
     type: 3}
-  defaultItemSize: 400
-  itemInterval: 128
-  instantiatedItemCount: 11
+  defaultItemSize: 10
+  itemInterval: 10
+  instantiatedItemCount: 9
   isNestedScroll: 1
---- !u!114 &1683426690
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1683426685}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6d89442c55f1f4d8e9736f1abce84792, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1751794621
 GameObject:
   m_ObjectHideFlags: 0
