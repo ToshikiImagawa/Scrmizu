@@ -44,7 +44,12 @@ namespace Scrmizu.Sample
             ClearItemData();
             AddRangeChatItemData(data);
             MovePositionAt(9);
+        }
 
+        public void AddChat(string message)
+        {
+            
+            AddChatItemData(new ChatItemData("sukumizu", message, DateTime.Now));
         }
     }
 }
