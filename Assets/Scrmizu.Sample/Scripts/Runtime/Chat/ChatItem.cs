@@ -6,7 +6,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Scrmizu.Sample
+namespace Scrmizu.Sample.Chat
 {
     [RequireComponent(typeof(RectTransform))]
     public class ChatItem : MonoBehaviour, IInfiniteScrollItem
@@ -47,12 +47,14 @@ namespace Scrmizu.Sample
 
     public class ChatItemData
     {
+        public string ChatId { get; }
         public string UserId { get; }
         public string Message { get; }
         public DateTime SendTime { get; }
 
-        public ChatItemData(string userId, string message, DateTime sendTime)
+        public ChatItemData(string chatId, string userId, string message, DateTime sendTime)
         {
+            ChatId = chatId;
             UserId = userId;
             Message = message;
             SendTime = sendTime;
