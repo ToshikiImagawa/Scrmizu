@@ -379,7 +379,7 @@ namespace Scrmizu
 
         internal void UpdateItemSize(InfiniteScrollBinderBase binder)
         {
-            if (binder.ItemIndex < 0 || binder.ItemIndex > _itemSizeList.Count) return;
+            if (binder.ItemIndex < 0 || binder.ItemIndex >= _itemSizeList.Count) return;
             float size;
             switch (direction)
             {
