@@ -13,7 +13,7 @@ namespace Scrmizu.Sample.Chat
 {
     public class ChatInfiniteScrollRect : InfiniteScrollRect
     {
-        private AnimationCurve _curve;
+        private readonly AnimationCurve _curve = null;
         
         protected override IInfiniteScrollItemRepository InfiniteScrollItemRepository
         {

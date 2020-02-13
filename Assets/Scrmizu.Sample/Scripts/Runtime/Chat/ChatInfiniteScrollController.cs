@@ -11,9 +11,9 @@ namespace Scrmizu.Sample.Chat
 {
     public class ChatInfiniteScrollController : MonoBehaviour
     {
-        [InjectField] private IChatService _chatService;
+        [InjectField] private readonly IChatService _chatService = default;
 
-        [SerializeField] private Container container;
+        [SerializeField] private Container container = default;
         private ChatInfiniteScrollRect _chatInfiniteScrollRect;
         private SynchronizationContext _unitySynchronizationContext;
 
@@ -25,7 +25,6 @@ namespace Scrmizu.Sample.Chat
         public void AddChat(string message)
         {
             Task.Run(async () => { await _chatService.SendMessage(message); });
-            _unitySynchronizationContext = SynchronizationContext.Current;
         }
 
         private void Awake()
@@ -33,6 +32,8 @@ namespace Scrmizu.Sample.Chat
             container.Inject(this);
             _chatService.ChatEventListener += ChatEventHandler;
             _chatService.UpdateEventListener += UpdateEventListener;
+            _chatService.UpdateAll();
+            _unitySynchronizationContext = SynchronizationContext.Current;
         }
 
         private void OnDestroy()

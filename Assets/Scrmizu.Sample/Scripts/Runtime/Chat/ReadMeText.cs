@@ -9,7 +9,7 @@ namespace Scrmizu.Sample.Chat
     [RequireComponent(typeof(Text))]
     public class ReadMeText : MonoBehaviour
     {
-        [SerializeField] private TextAsset readMe;
+        [SerializeField] private TextAsset readMe = default;
         private Text _text;
         private Text Text => _text != null ? _text : _text = GetComponent<Text>();
 

@@ -4,6 +4,7 @@
 using System;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace Scrmizu.Sample.Chat
@@ -45,19 +46,22 @@ namespace Scrmizu.Sample.Chat
         }
     }
 
+    [Serializable]
     public class ChatItemData
     {
-        public string ChatId { get; }
-        public string UserId { get; }
-        public string Message { get; }
-        public DateTime SendTime { get; }
+        [field: SerializeField] public string ChatId { get; private set; }
+        [field: SerializeField] public string UserId { get; private set; }
+        [field: SerializeField] public string Message { get; private set; }
+
+        [SerializeField] private long sendTimeTicks;
+        public DateTime SendTime => new DateTime(sendTimeTicks);
 
         public ChatItemData(string chatId, string userId, string message, DateTime sendTime)
         {
             ChatId = chatId;
             UserId = userId;
             Message = message;
-            SendTime = sendTime;
+            sendTimeTicks = sendTime.Ticks;
         }
     }
 }

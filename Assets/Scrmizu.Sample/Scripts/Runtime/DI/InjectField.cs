@@ -5,6 +5,7 @@ using System;
 
 namespace Scrmizu.Sample.DI
 {
+    [AttributeUsage(AttributeTargets.Field)]
     public sealed class InjectField : Attribute
     {
     }

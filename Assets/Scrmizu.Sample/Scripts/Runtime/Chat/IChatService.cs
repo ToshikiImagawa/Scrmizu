@@ -12,5 +12,7 @@ namespace Scrmizu.Sample.Chat
         event Action<ChatItemData[]> UpdateEventListener;
 
         Task<bool> SendMessage(string message);
+
+        Task UpdateAll();
     }
 }
