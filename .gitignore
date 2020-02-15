@@ -16,6 +16,8 @@ ExportedObj/
 .consulo/
 *.csproj
 *.csproj.meta
+*.DotSettings
+*.DotSettings.meta
 *.unityproj
 *.sln
 *.sln.meta

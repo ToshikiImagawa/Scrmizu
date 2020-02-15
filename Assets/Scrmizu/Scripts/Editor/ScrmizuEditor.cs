@@ -4,7 +4,7 @@
 using Scrmizu.Editor;
 using UnityEditor;
 
-namespace DefaultNamespace
+namespace Scrmizu.Editor
 {
     public class ScrmizuEditor
     {
