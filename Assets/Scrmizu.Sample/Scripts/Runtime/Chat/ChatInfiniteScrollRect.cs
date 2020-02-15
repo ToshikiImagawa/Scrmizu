@@ -19,8 +19,7 @@ namespace Scrmizu.Sample.Chat
         {
             get
             {
-                return _infiniteScrollItemRepository ?? (_infiniteScrollItemRepository =
-                           new SortedInfiniteScrollItemRepository<DateTime, ChatItemData>(data => data.SendTime));
+                return new SortedInfiniteScrollItemRepository<DateTime, ChatItemData>(data => data.SendTime);
             }
         }
 
