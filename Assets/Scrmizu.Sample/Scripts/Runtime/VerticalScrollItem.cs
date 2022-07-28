@@ -31,12 +31,16 @@ namespace Scrmizu.Sample
         public void UpdateItemData(object data)
         {
             if (!(data is ScrollItemData scrollingItemData)) return;
+            if (_data != scrollingItemData)
+            {
+                _data = scrollingItemData;
+                Title.text = _data.title;
+                Count.text = $"Count {_data.count:00}";
+                Value.text = _data.value;
+            }
+            Canvas.ForceUpdateCanvases();
+            gameObject.SetActive(false);
             gameObject.SetActive(true);
-            if (_data == scrollingItemData) return;
-            _data = scrollingItemData;
-            Title.text = _data.title;
-            Count.text = $"Count {_data.count:00}";
-            Value.text = _data.value;
         }
 
         public void Hide()
