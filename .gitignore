@@ -49,3 +49,6 @@ Packages/**/*
 
 # Logs
 /[Ll]ogs/
+
+# JetBrains
+!*.DotSettings
