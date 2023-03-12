@@ -58,7 +58,6 @@ namespace Scrmizu
             ItemIndex = itemIndex;
             InfiniteScrollItem.UpdateItemData(data);
             OnUpdateItemData(data);
-            Debug.Log($"[UpdateItemData] itemIndex : {itemIndex} Size : {Size}");
         }
 
         /// <summary>
@@ -75,7 +74,6 @@ namespace Scrmizu
             if (Size == currentSize) return;
             currentSize = Size;
             ParentInfiniteScrollRect.UpdateItemSize(this);
-            Debug.Log($"[UpdateItemSize] itemIndex : {ItemIndex} Size : {Size}");
         }
 
         protected virtual void OnHide()
