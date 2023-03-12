@@ -131,8 +131,7 @@ namespace Scrmizu
         }
 
         private IInfiniteScrollItemRepository InnerInfiniteScrollItemRepository =>
-            InfiniteScrollItemRepository ??
-            (InfiniteScrollItemRepository = new StandardInfiniteScrollItemRepository());
+            InfiniteScrollItemRepository ??= new StandardInfiniteScrollItemRepository();
 
         private InfiniteScrollBinderBase[] InfiniteScrollBinders
         {

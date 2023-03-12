@@ -301,7 +301,7 @@ namespace Scrmizu
                 if (_viewRect == null)
                     _viewRect = viewport;
                 if (_viewRect == null)
-                    _viewRect = (RectTransform) transform;
+                    _viewRect = (RectTransform)transform;
                 return _viewRect;
             }
         }
@@ -503,7 +503,7 @@ namespace Scrmizu
                 return;
 
             if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(ViewRect, eventData.position,
-                eventData.pressEventCamera, out var localCursor))
+                    eventData.pressEventCamera, out var localCursor))
                 return;
 
             UpdateBounds();
@@ -812,7 +812,7 @@ namespace Scrmizu
             if (value < 0)
                 page = 0;
             else
-                page = (int) Mathf.Floor(value / size + 0.5f);
+                page = (int)Mathf.Floor(value / size + 0.5f);
             if (page >= content.childCount) page = content.childCount - 1;
             if (beforePage == page) return;
             onPageChanged.Invoke(page);
@@ -894,7 +894,7 @@ namespace Scrmizu
                     _tracker.Add(this, content, DrivenTransformProperties.AnchorMinY);
                     _tracker.Add(this, content, DrivenTransformProperties.PivotY);
 
-                    content.SetSizeWithCurrentAnchors((RectTransform.Axis) axis, height * content.childCount);
+                    content.SetSizeWithCurrentAnchors((RectTransform.Axis)axis, height * content.childCount);
                     content.anchorMax = new Vector2(content.anchorMax.x, isReverse ? 0 : 1f);
                     content.anchorMin = new Vector2(content.anchorMin.x, isReverse ? 0 : 1f);
                     content.pivot = new Vector2(content.pivot.x, isReverse ? 0 : 1f);
@@ -909,7 +909,7 @@ namespace Scrmizu
                         _tracker.Add(this, child, DrivenTransformProperties.PivotY);
                         child.anchoredPosition = new Vector2(child.anchoredPosition.x,
                             height / 2 * (isReverse ? 1 : -1) + height * i * (isReverse ? 1 : -1));
-                        child.SetSizeWithCurrentAnchors((RectTransform.Axis) axis, height);
+                        child.SetSizeWithCurrentAnchors((RectTransform.Axis)axis, height);
                         child.anchorMax = new Vector2(child.anchorMax.x, isReverse ? 0 : 1f);
                         child.anchorMin = new Vector2(child.anchorMin.x, isReverse ? 0 : 1f);
                         child.pivot = new Vector2(child.pivot.x, 0.5f);
@@ -925,7 +925,7 @@ namespace Scrmizu
                     _tracker.Add(this, content, DrivenTransformProperties.AnchorMinX);
                     _tracker.Add(this, content, DrivenTransformProperties.PivotX);
 
-                    content.SetSizeWithCurrentAnchors((RectTransform.Axis) axis, width * content.childCount);
+                    content.SetSizeWithCurrentAnchors((RectTransform.Axis)axis, width * content.childCount);
                     content.anchorMax = new Vector2(isReverse ? 1f : 0, content.anchorMax.y);
                     content.anchorMin = new Vector2(isReverse ? 1f : 0, content.anchorMin.y);
                     content.pivot = new Vector2(isReverse ? 1f : 0, content.pivot.y);
@@ -941,7 +941,7 @@ namespace Scrmizu
                         child.anchoredPosition =
                             new Vector2(width / 2 * (isReverse ? -1 : 1) + width * i * (isReverse ? -1 : 1),
                                 child.anchoredPosition.y);
-                        child.SetSizeWithCurrentAnchors((RectTransform.Axis) axis, width);
+                        child.SetSizeWithCurrentAnchors((RectTransform.Axis)axis, width);
                         child.anchorMax = new Vector2(isReverse ? 1f : 0, child.anchorMax.y);
                         child.anchorMin = new Vector2(isReverse ? 1f : 0, child.anchorMin.y);
                         child.pivot = new Vector2(0.5f, child.pivot.y);
@@ -979,19 +979,16 @@ namespace Scrmizu
                 contentSize.x = viewBounds.size.x;
             }
 
-            if (excess.y > 0)
-            {
-                contentPos.y -= excess.y * (contentPivot.y - 0.5f);
-                contentSize.y = viewBounds.size.y;
-            }
+            if (excess.y <= 0) return;
+            contentPos.y -= excess.y * (contentPivot.y - 0.5f);
+            contentSize.y = viewBounds.size.y;
         }
 
         private readonly Vector3[] _mCorners = new Vector3[4];
 
         private Bounds GetBounds()
         {
-            if (content == null)
-                return new Bounds();
+            if (content == null) return new Bounds();
             content.GetWorldCorners(_mCorners);
             var viewWorldToLocalMatrix = ViewRect.worldToLocalMatrix;
             return InternalGetBounds(_mCorners, ref viewWorldToLocalMatrix);
