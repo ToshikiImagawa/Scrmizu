@@ -64,6 +64,9 @@ namespace Scrmizu
         private bool _isUpdateCanvasRequest;
 
         private List<float> _itemSizeList = new List<float>();
+        
+        private bool _hasItemSizeListTemp;
+        private Dictionary<int, float> _itemSizeListTemp = new Dictionary<int, float>();
 
         /// <summary>
         /// Gets the index of the current item.
@@ -157,8 +160,9 @@ namespace Scrmizu
         public void SetItemData(IEnumerable<object> data)
         {
             InnerInfiniteScrollItemRepository.Clear();
-            InnerInfiniteScrollItemRepository.AddRange(data ?? new object[0]);
+            InnerInfiniteScrollItemRepository.AddRange(data ?? Array.Empty<object>());
             _itemSizeList = Enumerable.Repeat(defaultItemSize, InnerInfiniteScrollItemRepository.Count).ToList();
+            _itemSizeListTemp = new Dictionary<int, float>();
             MovePositionAt(0);
             UpdateContents();
             _isUpdateCanvasRequest = true;
@@ -391,21 +395,34 @@ namespace Scrmizu
         internal void UpdateItemSize(InfiniteScrollBinderBase binder)
         {
             if (binder.ItemIndex < 0 || binder.ItemIndex >= _itemSizeList.Count) return;
-            float size;
-            switch (direction)
+            var size = direction switch
             {
-                case Direction.Vertical:
-                    size = binder.Size.y;
-                    break;
-                case Direction.Horizontal:
-                    size = binder.Size.x;
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
+                Direction.Vertical => binder.Size.y,
+                Direction.Horizontal => binder.Size.x,
+                _ => throw new ArgumentOutOfRangeException()
+            };
+
+            if (!_itemSizeList[binder.ItemIndex].Equals(size))
+            {
+                _itemSizeListTemp[binder.ItemIndex] = size;
+                return;
             }
 
-            if (_itemSizeList[binder.ItemIndex].Equals(size)) return;
-            _itemSizeList[binder.ItemIndex] = size;
+            if (_itemSizeListTemp.Count == 0) return;
+            _itemSizeListTemp.Remove(binder.ItemIndex);
+        }
+
+        private void FixedUpdateItemSizeList()
+        {
+            if (_itemSizeListTemp.Count <= 0) return;
+            var items = _itemSizeListTemp.ToArray();
+            _itemSizeListTemp.Clear();
+            foreach (var item in items)
+            {
+                var (index, size) = (item.Key, item.Value);
+                _itemSizeList[index] = size;
+            }
+
             UpdateContents();
         }
 
@@ -427,6 +444,17 @@ namespace Scrmizu
                 {
                     binder.UpdateSize();
                 }
+            }
+
+            if (_hasItemSizeListTemp)
+            {
+                _hasItemSizeListTemp = false;
+                FixedUpdateItemSizeList();
+            }
+
+            if (_itemSizeListTemp.Count > 0)
+            {
+                _hasItemSizeListTemp = true;
             }
 
             UpdateCanvas();
