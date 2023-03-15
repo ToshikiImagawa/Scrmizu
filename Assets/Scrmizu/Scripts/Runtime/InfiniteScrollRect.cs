@@ -460,17 +460,13 @@ namespace Scrmizu
             var contentRectTransform = content;
             Assert.IsNotNull(contentRectTransform, "Content is not set.");
             var fullSize = _itemSizeList.Sum() + itemInterval * (_itemSizeList.Count - 1);
-            switch (direction)
+            var currentSizeDelta = contentRectTransform.sizeDelta;
+            contentRectTransform.sizeDelta = direction switch
             {
-                case Direction.Vertical:
-                    contentRectTransform.sizeDelta = new Vector2(contentRectTransform.sizeDelta.x, fullSize);
-                    break;
-                case Direction.Horizontal:
-                    contentRectTransform.sizeDelta = new Vector2(fullSize, contentRectTransform.sizeDelta.y);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+                Direction.Vertical => new Vector2(currentSizeDelta.x, fullSize),
+                Direction.Horizontal => new Vector2(fullSize, currentSizeDelta.y),
+                _ => throw new ArgumentOutOfRangeException()
+            };
 
             UpdatePosition();
         }
