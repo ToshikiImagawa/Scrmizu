@@ -1,4 +1,5 @@
 ﻿using UnityEditor;
+using Task = System.Threading.Tasks.Task;
 
 namespace Scrmizu.Tools.Editor
 {
@@ -8,14 +9,20 @@ namespace Scrmizu.Tools.Editor
         static ScrmizuTool()
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode) return;
-            UnityPackage();
-            SampleUnityPackage();
+            UpdatePackages();
+
+            async void UpdatePackages()
+            {
+                await Task.Delay(1000);
+                UnityPackage();
+                SampleUnityPackage();
+            }
         }
 
         [MenuItem("Window/Scrmizu/Update ReduxPackage")]
         public static void UnityPackage()
         {
-            var assetPathNames = new[] {"Assets/Scrmizu"};
+            var assetPathNames = new[] { "Assets/Scrmizu" };
             const string fileName = "Scrmizu.unitypackage";
 
             const ExportPackageOptions
@@ -26,7 +33,7 @@ namespace Scrmizu.Tools.Editor
         [MenuItem("Window/Scrmizu/Update SampleReduxPackage")]
         public static void SampleUnityPackage()
         {
-            var assetPathNames = new[] {"Assets/Scrmizu.Sample"};
+            var assetPathNames = new[] { "Assets/Scrmizu.Sample" };
             const string fileName = "Scrmizu.Sample.unitypackage";
 
             const ExportPackageOptions
