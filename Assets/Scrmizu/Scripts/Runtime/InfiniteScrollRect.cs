@@ -406,7 +406,6 @@ namespace Scrmizu
 
             if (_itemSizeList[binder.ItemIndex].Equals(size)) return;
             _itemSizeList[binder.ItemIndex] = size;
-            UpdateContents();
         }
 
         protected override void Awake()
@@ -418,15 +417,15 @@ namespace Scrmizu
             UpdatePosition();
         }
 
-        protected override void LateUpdate()
+        protected virtual void Update()
         {
-            base.LateUpdate();
             if (Application.isPlaying)
             {
                 foreach (var binder in InfiniteScrollBinders)
                 {
                     binder.UpdateSize();
                 }
+                UpdateContents();
             }
 
             UpdateCanvas();

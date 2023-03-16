@@ -54,6 +54,7 @@ namespace Scrmizu
                 return;
             }
 
+            currentSize = Vector2.zero;
             Data = data;
             ItemIndex = itemIndex;
             InfiniteScrollItem.UpdateItemData(data);
