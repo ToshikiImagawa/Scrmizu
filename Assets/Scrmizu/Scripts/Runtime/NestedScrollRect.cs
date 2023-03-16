@@ -29,8 +29,7 @@ namespace Scrmizu
             {
                 if (_parentInitializePotentialDragHandler != null) return _parentInitializePotentialDragHandler;
                 if (transform.parent == null) return null;
-                return _parentInitializePotentialDragHandler ?? (_parentInitializePotentialDragHandler =
-                           transform.parent.GetComponentInParent<IInitializePotentialDragHandler>());
+                return _parentInitializePotentialDragHandler ??= transform.parent.GetComponentInParent<IInitializePotentialDragHandler>();
             }
         }
 
@@ -40,8 +39,7 @@ namespace Scrmizu
             {
                 if (_parentDragHandler != null) return _parentDragHandler;
                 if (transform.parent == null) return null;
-                return _parentDragHandler ?? (_parentDragHandler =
-                           transform.parent.GetComponentInParent<IDragHandler>());
+                return _parentDragHandler ??= transform.parent.GetComponentInParent<IDragHandler>();
             }
         }
 
@@ -51,8 +49,7 @@ namespace Scrmizu
             {
                 if (_parentBeginDragHandler != null) return _parentBeginDragHandler;
                 if (transform.parent == null) return null;
-                return _parentBeginDragHandler ?? (_parentBeginDragHandler =
-                           transform.parent.GetComponentInParent<IBeginDragHandler>());
+                return _parentBeginDragHandler ??= transform.parent.GetComponentInParent<IBeginDragHandler>();
             }
         }
 
@@ -62,8 +59,7 @@ namespace Scrmizu
             {
                 if (_parentEndDragHandler != null) return _parentEndDragHandler;
                 if (transform.parent == null) return null;
-                return _parentEndDragHandler ?? (_parentEndDragHandler =
-                           transform.parent.GetComponentInParent<IEndDragHandler>());
+                return _parentEndDragHandler ??= transform.parent.GetComponentInParent<IEndDragHandler>();
             }
         }
 

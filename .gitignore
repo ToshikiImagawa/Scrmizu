@@ -46,3 +46,11 @@ Assets/Plugins/**/*
 # Packages
 Packages/**/*
 !Packages/manifest.json
+
+# Logs
+/[Ll]ogs/
+
+
+# JetBrains
+!*.DotSettings
+
