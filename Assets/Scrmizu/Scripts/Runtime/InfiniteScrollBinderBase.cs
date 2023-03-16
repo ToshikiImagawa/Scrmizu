@@ -20,6 +20,8 @@ namespace Scrmizu
         /// </summary>
         internal int ItemIndex { get; private set; }
 
+        internal object Data { get; private set; }
+
         /// <summary>
         /// Get InfiniteScrollItem.
         /// </summary>
@@ -47,7 +49,13 @@ namespace Scrmizu
         /// <param name="itemIndex"></param>
         internal void UpdateItemData(object data, int itemIndex)
         {
+            if (itemIndex == ItemIndex && Data.Equals(data))
+            {
+                return;
+            }
+
             currentSize = Vector2.zero;
+            Data = data;
             ItemIndex = itemIndex;
             InfiniteScrollItem.UpdateItemData(data);
             OnUpdateItemData(data);
