@@ -9,6 +9,7 @@ namespace Scrmizu
     public abstract class InfiniteScrollBinderBase : MonoBehaviour
     {
         [SerializeField] private Vector2 currentSize;
+        private Vector2 _beforeSize = Vector2.one * -1f;
 
         /// <summary>
         /// Get item size.
@@ -20,6 +21,9 @@ namespace Scrmizu
         /// </summary>
         internal int ItemIndex { get; private set; }
 
+        /// <summary>
+        /// Get data.
+        /// </summary>
         internal object Data { get; private set; }
 
         /// <summary>
@@ -37,6 +41,7 @@ namespace Scrmizu
         /// </summary>
         internal void Hide()
         {
+            _beforeSize = Size;
             ItemIndex = -1;
             InfiniteScrollItem.Hide();
             OnHide();
@@ -49,11 +54,8 @@ namespace Scrmizu
         /// <param name="itemIndex"></param>
         internal void UpdateItemData(object data, int itemIndex)
         {
-            if (itemIndex == ItemIndex && Data.Equals(data))
-            {
-                return;
-            }
-
+            if (itemIndex == ItemIndex && Data.Equals(data)) return;
+            _beforeSize = Size;
             currentSize = Vector2.zero;
             Data = data;
             ItemIndex = itemIndex;
@@ -74,6 +76,7 @@ namespace Scrmizu
         {
             if (Size == currentSize) return;
             currentSize = Size;
+            if (currentSize == _beforeSize) return;
             ParentInfiniteScrollRect.UpdateItemSize(this);
         }
 

@@ -60,7 +60,7 @@ namespace Scrmizu
 
         private InfiniteScrollBinderBase[] _infiniteScrollBinders;
 
-        private int _currentBinderIndex;
+        private int _currentBinderIndex = -1;
         private bool _isUpdateCanvasRequest;
 
         private List<float> _itemSizeList = new List<float>();
@@ -69,7 +69,7 @@ namespace Scrmizu
         /// Gets the index of the current item.
         /// </summary>
         /// <value>The index of the current item.</value>
-        public int CurrentItemIndex { get; private set; }
+        public int CurrentItemIndex { get; private set; } = -1;
 
         /// <summary>
         /// Get the position of the current item.　
@@ -391,18 +391,12 @@ namespace Scrmizu
         internal void UpdateItemSize(InfiniteScrollBinderBase binder)
         {
             if (binder.ItemIndex < 0 || binder.ItemIndex >= _itemSizeList.Count) return;
-            float size;
-            switch (direction)
+            var size = direction switch
             {
-                case Direction.Vertical:
-                    size = binder.Size.y;
-                    break;
-                case Direction.Horizontal:
-                    size = binder.Size.x;
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+                Direction.Vertical => binder.Size.y,
+                Direction.Horizontal => binder.Size.x,
+                _ => throw new ArgumentOutOfRangeException()
+            };
 
             if (_itemSizeList[binder.ItemIndex].Equals(size)) return;
             _itemSizeList[binder.ItemIndex] = size;
@@ -413,8 +407,9 @@ namespace Scrmizu
             base.Awake();
             if (!Application.isPlaying) return;
             onValueChanged.AddListener(OnScrollMove);
-
-            UpdatePosition();
+            var itemSizeList = _itemSizeList.ToArray();
+            UpdateCurrentItemIndex(itemSizeList);
+            UpdateBinder(itemSizeList);
         }
 
         protected virtual void Update()
@@ -425,6 +420,7 @@ namespace Scrmizu
                 {
                     binder.UpdateSize();
                 }
+
                 UpdateContents();
             }
 
@@ -451,33 +447,52 @@ namespace Scrmizu
                     throw new ArgumentOutOfRangeException();
             }
 
-            UpdatePosition();
+            var itemSizeList = _itemSizeList.ToArray();
+            var updated = UpdateCurrentItemIndex(itemSizeList);
+            // 変更なければスキップ
+            if (!updated) return;
+            UpdateBinder(itemSizeList);
         }
 
         private void UpdateContents()
         {
             var contentRectTransform = content;
             Assert.IsNotNull(contentRectTransform, "Content is not set.");
-            var fullSize = _itemSizeList.Sum() + itemInterval * (_itemSizeList.Count - 1);
             var currentSizeDelta = contentRectTransform.sizeDelta;
-            contentRectTransform.sizeDelta = direction switch
+            var contentFullSize = direction switch
             {
-                Direction.Vertical => new Vector2(currentSizeDelta.x, fullSize),
-                Direction.Horizontal => new Vector2(fullSize, currentSizeDelta.y),
+                Direction.Vertical => currentSizeDelta.y,
+                Direction.Horizontal => currentSizeDelta.x,
+                _ => throw new ArgumentOutOfRangeException()
+            };
+            var newFullSize = _itemSizeList.Sum() + itemInterval * (_itemSizeList.Count - 1);
+            var newSizeDelta = direction switch
+            {
+                Direction.Vertical => new Vector2(currentSizeDelta.x, newFullSize),
+                Direction.Horizontal => new Vector2(newFullSize, currentSizeDelta.y),
                 _ => throw new ArgumentOutOfRangeException()
             };
 
-            UpdatePosition();
+            // サイズに変更がなければスキップ
+            if (!(Math.Abs(contentFullSize - newFullSize) > float.Epsilon)) return;
+            contentRectTransform.sizeDelta = newSizeDelta;
+            var itemSizeList = _itemSizeList.ToArray();
+            UpdateCurrentItemIndex(itemSizeList);
+            UpdateBinder(itemSizeList);
         }
 
-        private void UpdatePosition()
+        /// <summary>
+        /// Update current itemIndex
+        /// </summary>
+        /// <param name="itemSizeList"></param>
+        private bool UpdateCurrentItemIndex(float[] itemSizeList)
         {
-            var itemSizeList = _itemSizeList.ToArray();
-
             var smallItemIndex = 0;
             var bigItemIndex = itemSizeList.Length - 1;
             var bigItemIndexPosition = itemSizeList.Sum() + itemInterval * (itemSizeList.Length - 1);
 
+            var beforeItemIndex = CurrentItemIndex;
+            var beforeBinderIndex = _currentBinderIndex;
             if (bigItemIndexPosition <= CurrentPosition)
             {
                 CurrentItemIndex = itemSizeList.Length - 1;
@@ -509,13 +524,16 @@ namespace Scrmizu
             }
 
             _currentBinderIndex = CurrentItemIndex % instantiatedItemCount;
-            UpdateBinder();
+            return beforeItemIndex != CurrentItemIndex || beforeBinderIndex != _currentBinderIndex;
         }
 
-        private void UpdateBinder()
+        /// <summary>
+        /// Update binder.
+        /// </summary>
+        /// <exception cref="ArgumentOutOfRangeException"></exception>
+        private void UpdateBinder(float[] itemSizeList)
         {
             var data = InnerInfiniteScrollItemRepository.ToArray();
-            var itemSizeList = _itemSizeList.ToArray();
             var fullSize = itemSizeList.Sum() + Mathf.Max(itemSizeList.Length - 1, 0f) * itemInterval;
 
             for (var i = 0; i < InfiniteScrollBinders.Length; i++)
@@ -542,7 +560,7 @@ namespace Scrmizu
                     pos = itemSizeRange.Sum() + itemInterval * itemIndex;
                 }
 
-                if (!isReverse) pos = pos * -1;
+                if (!isReverse) pos *= -1;
                 switch (direction)
                 {
                     case Direction.Vertical:
