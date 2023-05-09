@@ -24,16 +24,25 @@ namespace Scrmizu
         /// <summary>
         /// Get data.
         /// </summary>
+        // ReSharper disable once MemberCanBePrivate.Global
         internal object Data { get; private set; }
 
         /// <summary>
         /// Get InfiniteScrollItem.
         /// </summary>
-        protected IInfiniteScrollItem InfiniteScrollItem { get; set; }
+        // ReSharper disable once MemberCanBePrivate.Global
+        protected IInfiniteScrollItem InfiniteScrollItem =>
+            _infiniteScrollItem ??= GetComponent<IInfiniteScrollItem>() ??
+                                    throw new InvalidOperationException(
+                                        $"Component implementing {nameof(IInfiniteScrollItem)} must be attached to GameObject."
+                                    );
+
+        private IInfiniteScrollItem _infiniteScrollItem;
 
         /// <summary>
         /// Get parent InfiniteScrollRect.
         /// </summary>
+        // ReSharper disable once MemberCanBePrivate.Global
         protected InfiniteScrollRect ParentInfiniteScrollRect { get; private set; }
 
         /// <summary>
@@ -95,14 +104,6 @@ namespace Scrmizu
         internal void SetInfiniteScroll(InfiniteScrollRect parentInfiniteScrollRect)
         {
             ParentInfiniteScrollRect = parentInfiniteScrollRect;
-        }
-
-        private void Awake()
-        {
-            InfiniteScrollItem = GetComponent<IInfiniteScrollItem>();
-            if (InfiniteScrollItem == null)
-                throw new Exception(
-                    "Component implementing IInfiniteScrollItem must be attached to GameObject.");
         }
     }
 }
