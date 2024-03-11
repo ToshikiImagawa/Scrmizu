@@ -2,6 +2,7 @@
 // Copyright (c) 2016-2020 COMCREATE. All rights reserved.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -63,7 +64,9 @@ namespace Scrmizu
         private int _currentBinderIndex = -1;
         private bool _isUpdateCanvasRequest;
 
-        private List<float> _itemSizeList = new List<float>();
+        private DefaultValueList _itemSizeList;
+
+        private DefaultValueList ItemSizeList => _itemSizeList ??= new DefaultValueList(defaultItemSize);
 
         /// <summary>
         /// Gets the index of the current item.
@@ -81,7 +84,7 @@ namespace Scrmizu
         /// Get count of items.
         /// </summary>
         /// <value>Count of items.</value>
-        public int Count => _itemSizeList.Count;
+        public int Count => ItemSizeList.Count;
 
         /// <summary>
         /// Max value that can be scrolled.
@@ -93,15 +96,15 @@ namespace Scrmizu
             get
             {
                 Assert.IsNotNull(content, "Content is not set.");
-                switch (direction)
+                Assert.IsNotNull(viewport, "Viewport is not set.");
+                var contentRect = content.rect;
+                var viewportRect = viewport.rect;
+                return direction switch
                 {
-                    case Direction.Vertical:
-                        return content.rect.height - viewport.rect.height;
-                    case Direction.Horizontal:
-                        return content.rect.width - viewport.rect.width;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
+                    Direction.Vertical => contentRect.height - viewportRect.height,
+                    Direction.Horizontal => contentRect.width - viewportRect.width,
+                    _ => throw new ArgumentOutOfRangeException()
+                };
             }
         }
 
@@ -157,8 +160,8 @@ namespace Scrmizu
         public void SetItemData(IEnumerable<object> data)
         {
             InnerInfiniteScrollItemRepository.Clear();
-            InnerInfiniteScrollItemRepository.AddRange(data ?? new object[0]);
-            _itemSizeList = Enumerable.Repeat(defaultItemSize, InnerInfiniteScrollItemRepository.Count).ToList();
+            InnerInfiniteScrollItemRepository.AddRange(data ?? Array.Empty<object>());
+            _itemSizeList = new DefaultValueList(defaultItemSize, InnerInfiniteScrollItemRepository.Count);
             MovePositionAt(0);
             UpdateContents();
             _isUpdateCanvasRequest = true;
@@ -171,7 +174,7 @@ namespace Scrmizu
         public void AddItemData(object data)
         {
             InnerInfiniteScrollItemRepository.Add(data);
-            _itemSizeList.Add(defaultItemSize);
+            ItemSizeList.Add();
             UpdateContents();
             _isUpdateCanvasRequest = true;
         }
@@ -184,7 +187,7 @@ namespace Scrmizu
         {
             var item = data.ToArray();
             InnerInfiniteScrollItemRepository.AddRange(item);
-            _itemSizeList.AddRange(Enumerable.Repeat(defaultItemSize, item.Length));
+            ItemSizeList.AddRange(item.Length);
             UpdateContents();
             _isUpdateCanvasRequest = true;
         }
@@ -197,7 +200,7 @@ namespace Scrmizu
         public void InsertItemData(int index, object data)
         {
             InnerInfiniteScrollItemRepository.Insert(index, data);
-            _itemSizeList.Insert(index, defaultItemSize);
+            ItemSizeList.Insert(index);
 
             if (CurrentItemIndex >= index) MovePosition(CurrentPosition + defaultItemSize + itemInterval);
 
@@ -214,7 +217,7 @@ namespace Scrmizu
         {
             var item = data.ToArray();
             InnerInfiniteScrollItemRepository.InsertRange(index, item);
-            _itemSizeList.InsertRange(index, Enumerable.Repeat(defaultItemSize, item.Length));
+            ItemSizeList.InsertRange(index, item.Length);
 
             if (CurrentItemIndex >= index)
             {
@@ -233,15 +236,15 @@ namespace Scrmizu
         public void RemoveAtItemData(int index)
         {
             if (index < 0) throw new ArgumentOutOfRangeException(nameof(index), "Index is out of range.");
-            if (index > _itemSizeList.Count) throw new ArgumentException("Deleted range is out of range.");
+            if (index > ItemSizeList.Count) throw new ArgumentException("Deleted range is out of range.");
             var itemIndex = CurrentItemIndex;
-            var itemSizeList = _itemSizeList.ToArray();
+            var itemSizeList = ItemSizeList.ToArray();
             InnerInfiniteScrollItemRepository.RemoveAt(index);
-            _itemSizeList.RemoveAt(index);
+            ItemSizeList.RemoveAt(index);
 
             if (itemIndex == index)
             {
-                MovePositionAt(Math.Min(_itemSizeList.Count - 1, index));
+                MovePositionAt(Math.Min(ItemSizeList.Count - 1, index));
             }
             else if (itemIndex > index)
             {
@@ -262,15 +265,15 @@ namespace Scrmizu
         {
             if (index < 0) throw new ArgumentOutOfRangeException(nameof(index), "Index is out of range.");
             if (count < 0) throw new ArgumentOutOfRangeException(nameof(count), "Count is out of range.");
-            if ((count + index) > _itemSizeList.Count) throw new ArgumentException("Deleted range is out of range.");
+            if (count + index > ItemSizeList.Count) throw new ArgumentException("Deleted range is out of range.");
             var itemIndex = CurrentItemIndex;
-            var itemSizeList = _itemSizeList.ToArray();
+            var itemSizeList = ItemSizeList.ToArray();
             InnerInfiniteScrollItemRepository.RemoveRange(index, count);
-            _itemSizeList.RemoveRange(index, count);
+            ItemSizeList.RemoveRange(index, count);
 
             if (itemIndex >= index && itemIndex <= index + count - 1)
             {
-                MovePositionAt(Math.Min(_itemSizeList.Count - 1, index));
+                MovePositionAt(Math.Min(ItemSizeList.Count - 1, index));
             }
             else if (itemIndex > index)
             {
@@ -290,7 +293,7 @@ namespace Scrmizu
         public void ClearItemData()
         {
             InnerInfiniteScrollItemRepository.Clear();
-            _itemSizeList.Clear();
+            ItemSizeList.Clear();
             MovePositionAt(0);
             UpdateContents();
             _isUpdateCanvasRequest = true;
@@ -353,10 +356,10 @@ namespace Scrmizu
         /// <param name="index">Index.</param>
         public float GetPositionAt(int index)
         {
-            if (index < 0 || index > _itemSizeList.Count)
+            if (index < 0 || index > ItemSizeList.Count)
                 throw new ArgumentOutOfRangeException(nameof(index), "Index is out of range.");
             if (index == 0) return 0f;
-            var itemSizeList = _itemSizeList.ToArray();
+            var itemSizeList = ItemSizeList.ToArray();
             var itemSizeRange = new float[index];
             Array.Copy(itemSizeList, 0, itemSizeRange, 0, index);
             return itemSizeRange.Sum() + itemInterval * index;
@@ -370,9 +373,9 @@ namespace Scrmizu
         /// <exception cref="ArgumentOutOfRangeException"></exception>
         public float GetItemSize(int index)
         {
-            if (index < 0 || index >= _itemSizeList.Count)
+            if (index < 0 || index >= ItemSizeList.Count)
                 throw new ArgumentOutOfRangeException(nameof(index), "Index is out of range.");
-            return _itemSizeList[index];
+            return ItemSizeList[index];
         }
 
         /// <summary>
@@ -390,7 +393,7 @@ namespace Scrmizu
 
         internal void UpdateItemSize(InfiniteScrollBinderBase binder)
         {
-            if (binder.ItemIndex < 0 || binder.ItemIndex >= _itemSizeList.Count) return;
+            if (binder.ItemIndex < 0 || binder.ItemIndex >= ItemSizeList.Count) return;
             var size = direction switch
             {
                 Direction.Vertical => binder.Size.y,
@@ -398,8 +401,14 @@ namespace Scrmizu
                 _ => throw new ArgumentOutOfRangeException()
             };
 
-            if (_itemSizeList[binder.ItemIndex].Equals(size)) return;
-            _itemSizeList[binder.ItemIndex] = size;
+            if (ItemSizeList[binder.ItemIndex].Equals(size)) return;
+            ItemSizeList[binder.ItemIndex] = size;
+        }
+
+        internal bool IsInitialized(InfiniteScrollBinderBase binder)
+        {
+            if (binder.ItemIndex < 0 || binder.ItemIndex >= ItemSizeList.Count) return false;
+            return ItemSizeList.Contains(binder.ItemIndex);
         }
 
         protected override void Awake()
@@ -407,7 +416,7 @@ namespace Scrmizu
             base.Awake();
             if (!Application.isPlaying) return;
             onValueChanged.AddListener(OnScrollMove);
-            var itemSizeList = _itemSizeList.ToArray();
+            var itemSizeList = ItemSizeList.ToArray();
             UpdateCurrentItemIndex(itemSizeList);
             UpdateBinder(itemSizeList);
         }
@@ -447,7 +456,7 @@ namespace Scrmizu
                     throw new ArgumentOutOfRangeException();
             }
 
-            var itemSizeList = _itemSizeList.ToArray();
+            var itemSizeList = ItemSizeList.ToArray();
             var updated = UpdateCurrentItemIndex(itemSizeList);
             // 変更なければスキップ
             if (!updated) return;
@@ -465,7 +474,7 @@ namespace Scrmizu
                 Direction.Horizontal => currentSizeDelta.x,
                 _ => throw new ArgumentOutOfRangeException()
             };
-            var newFullSize = _itemSizeList.Sum() + itemInterval * (_itemSizeList.Count - 1);
+            var newFullSize = ItemSizeList.Sum() + itemInterval * (ItemSizeList.Count - 1);
             var newSizeDelta = direction switch
             {
                 Direction.Vertical => new Vector2(currentSizeDelta.x, newFullSize),
@@ -476,7 +485,7 @@ namespace Scrmizu
             // サイズに変更がなければスキップ
             if (!(Math.Abs(contentFullSize - newFullSize) > float.Epsilon)) return;
             contentRectTransform.sizeDelta = newSizeDelta;
-            var itemSizeList = _itemSizeList.ToArray();
+            var itemSizeList = ItemSizeList.ToArray();
             UpdateCurrentItemIndex(itemSizeList);
             UpdateBinder(itemSizeList);
         }
@@ -582,6 +591,85 @@ namespace Scrmizu
             Canvas.ForceUpdateCanvases();
             gameObject.SetActive(false);
             gameObject.SetActive(true);
+        }
+
+        private class DefaultValueList : IEnumerable<float>
+        {
+            private readonly List<float?> _list;
+            private readonly float _defaultValue;
+            public int Count => _list.Count;
+
+            public float this[int index]
+            {
+                set => _list[index] = value;
+                get => _list[index] ?? _defaultValue;
+            }
+
+            public DefaultValueList(float defaultValue)
+            {
+                _defaultValue = defaultValue;
+                _list = new List<float?>();
+            }
+
+            public DefaultValueList(float defaultValue, int count)
+            {
+                _defaultValue = defaultValue;
+                _list = Enumerable.Repeat((float?)null, count).ToList();
+            }
+
+            public bool Contains(int index)
+            {
+                if (index < 0 || index >= Count) return false;
+                return _list[index].HasValue;
+            }
+
+            public void Add()
+            {
+                _list.Add(null);
+            }
+
+            public void AddRange(int count)
+            {
+                _list.AddRange(Enumerable.Repeat((float?)null, count));
+            }
+
+            public void Insert(int index)
+            {
+                _list.Insert(index, null);
+            }
+
+            public void InsertRange(int index, int count)
+            {
+                _list.InsertRange(index, Enumerable.Repeat((float?)null, count));
+            }
+
+            public void RemoveAt(int index)
+            {
+                _list.RemoveAt(index);
+            }
+
+            public void RemoveRange(int index, int count)
+            {
+                _list.RemoveRange(index, count);
+            }
+
+            public void Clear()
+            {
+                _list.Clear();
+            }
+
+            public IEnumerator<float> GetEnumerator()
+            {
+                foreach (var item in _list)
+                {
+                    yield return item ?? _defaultValue;
+                }
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return GetEnumerator();
+            }
         }
     }
 

@@ -31,11 +31,11 @@ namespace Scrmizu
         /// Get InfiniteScrollItem.
         /// </summary>
         // ReSharper disable once MemberCanBePrivate.Global
-        protected IInfiniteScrollItem InfiniteScrollItem =>
-            _infiniteScrollItem ??= GetComponent<IInfiniteScrollItem>() ??
-                                    throw new InvalidOperationException(
-                                        $"Component implementing {nameof(IInfiniteScrollItem)} must be attached to GameObject."
-                                    );
+        protected IInfiniteScrollItem InfiniteScrollItem => _infiniteScrollItem ??=
+            GetComponent<IInfiniteScrollItem>() ??
+            throw new InvalidOperationException(
+                $"Component implementing {nameof(IInfiniteScrollItem)} must be attached to GameObject."
+            );
 
         private IInfiniteScrollItem _infiniteScrollItem;
 
@@ -50,7 +50,6 @@ namespace Scrmizu
         /// </summary>
         internal void Hide()
         {
-            _beforeSize = Size;
             ItemIndex = -1;
             InfiniteScrollItem.Hide();
             OnHide();
@@ -64,7 +63,6 @@ namespace Scrmizu
         internal void UpdateItemData(object data, int itemIndex)
         {
             if (itemIndex == ItemIndex && Data.Equals(data)) return;
-            _beforeSize = Size;
             currentSize = Vector2.zero;
             Data = data;
             ItemIndex = itemIndex;
@@ -85,7 +83,9 @@ namespace Scrmizu
         {
             if (Size == currentSize) return;
             currentSize = Size;
-            if (currentSize == _beforeSize) return;
+            var initialized = ParentInfiniteScrollRect.IsInitialized(this);
+            if (Size == _beforeSize && initialized) return;
+            _beforeSize = Size;
             ParentInfiniteScrollRect.UpdateItemSize(this);
         }
 
