@@ -5,7 +5,7 @@
 Scrmizu is variable infinite scroll and extended UnityEngine.UI.ScrollRect for Unity UGUI.
 
 # Required
-- Unity 2018.x or later.
+- Unity 2020.3.45f1 or later.
 - Scripting Runtime Version 4.6 Eq.
 
 # Install
